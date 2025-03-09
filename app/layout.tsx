@@ -7,7 +7,7 @@ import { CapturedImagesProvider } from "@/context/CapturedImagesContext";
 import Footer from "@/components/Footer";
 import { Spotlight } from "@/components/ui/spotlight-new";
 import { Toaster } from "@/components/ui/sonner";
-import Head from "next/head";
+import Script from "next/script";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <Head>
+      <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link
           rel="icon"
@@ -50,18 +50,18 @@ export default function RootLayout({
           sizes="<generated>"
         />
         {/* <!-- Google tag (gtag.js) --> */}
-        <script
+        <Script
           async
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
-        ></script>
-        <script>
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
 
           gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');`}
-        </script>
-      </Head>
+        </Script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
