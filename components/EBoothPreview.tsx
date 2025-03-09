@@ -1049,11 +1049,18 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
               Download <FaArrowDown />
             </Button>
             <Button
-              onClick={() => {
-                router.push("/generatebooth"); // Navigate first
-                // setTimeout(() => {
-                //   window.location.reload(); // Reload after a short delay
-                // }, 500);
+              onClick={async () => {
+                try {
+                  const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                  });
+                  stream.getTracks().forEach((track) => track.stop());
+
+                  router.push("/generatebooth");
+                } catch (error) {
+                  console.error("Error accessing camera:", error);
+                  alert("Please allow camera permissions to proceed.");
+                }
               }}
             >
               Take New Photos <FaRepeat />
