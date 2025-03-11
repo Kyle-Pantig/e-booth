@@ -21,12 +21,39 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "E-Booth | Capture & Share Memories Instantly",
-  description:
-    "E-Booth is a digital photo booth that lets you capture, customize, and instantly share your memories via email or social media.",
-  keywords:
-    "photo booth, digital booth, instant photos, e-booth, share photos, capture memories, email photos",
+  metadataBase: new URL("https://e-booth.vercel.app"),
+  keywords: [
+    "photo booth",
+    "digital booth",
+    "instant photos",
+    "e-booth",
+    "share photos",
+    "capture memories",
+    "e booth vercel",
+    "e-booth vercel",
+  ],
+  title: {
+    default: "E-Booth | Capture & Share Memories Instantly",
+    template: `%s | E-Booth | Capture & Share Memories Instantly`,
+  },
+  openGraph: {
+    title: "E-Booth | Capture & Share Memories Instantly",
+    description:
+      "E-Booth is a digital photo booth that lets you capture, customize, and instantly share your memories via email or social media.",
+    url: "https://e-booth.vercel.app",
+    siteName: "E-Booth",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png", 
+        width: 1200,
+        height: 630,
+        alt: "E-Booth - Capture & Share Memories Instantly",
+      },
+    ],
+  },
 };
+
 
 export default function RootLayout({
   children,
@@ -76,7 +103,9 @@ export default function RootLayout({
             <ModeToggle />
             <Spotlight />
             <div className="flex-grow flex justify-center items-center relative">
-              <CapturedImagesProvider>{children}</CapturedImagesProvider>
+              <CapturedImagesProvider>
+                {children}
+              </CapturedImagesProvider>
             </div>
             <Footer />
             <Toaster richColors />

@@ -6,13 +6,20 @@ import axios from "axios";
 import { Input } from "./ui/input";
 import { FaArrowDown, FaSmile } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-// import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useCapturedImages } from "@/context/CapturedImagesContext";
 import { FaRepeat } from "react-icons/fa6";
 import EmojiPicker from "emoji-picker-react";
 import { MdBlock } from "react-icons/md";
 import { toast } from "sonner";
+import { Checkbox } from "./ui/checkbox";
+import { BiBold, BiItalic } from "react-icons/bi";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Frame = {
   draw: (
@@ -464,6 +471,17 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const [showPicker, setShowPicker] = useState<boolean>(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const [sending, setSending] = useState<boolean>(false);
+  const [showDate, setShowDate] = useState<boolean>(true);
+  const [isBold, setIsBold] = useState<boolean>(false);
+  const [isItalic, setIsItalic] = useState<boolean>(false);
+  const [isDuplicate, setIsDuplicate] = useState<boolean>(false);
+  const [selectedFont, setSelectedFont] = useState<string>("Poppins");
+  const [fontSize, setFontSize] = useState<number>(20);
+
+  const toggleBold = () => setIsBold((prev) => !prev);
+  const toggleItalic = () => setIsItalic((prev) => !prev);
+
+  const MAX_LENGTH = 20;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -493,128 +511,183 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       borderSize * 2 +
       textHeight;
 
-    canvas.width = imgWidth + borderSize * 2;
+    // Adjust the total width based on duplication (remove left border for the second strip)
+    const totalWidth = isDuplicate
+      ? imgWidth * 2 + borderSize * 3 // Adjusted to keep right border on the second strip only
+      : imgWidth + borderSize * 2;
+
+    canvas.width = totalWidth;
     canvas.height = totalHeight;
 
-    if (stripColor === "film") {
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const drawStrip = (offsetX = 0, removeLeftBorder = false) => {
+      // Adjust left border removal for the second strip
+      const adjustedOffsetX = removeLeftBorder ? offsetX - borderSize : offsetX;
 
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, 40, canvas.height);
-      ctx.fillRect(canvas.width - 40, 0, 40, canvas.height);
+      // Draw the background (single or double column)
+      ctx.fillStyle = stripColor === "film" ? "black" : stripColor;
+      ctx.fillRect(
+        adjustedOffsetX,
+        0,
+        imgWidth + borderSize * 2,
+        canvas.height
+      );
 
-      ctx.fillStyle = "#fff";
-      const holeWidth = 30;
-      const holeHeight = 25;
-      const borderRadius = 5;
+      // Draw film holes if "film" is selected
+      if (stripColor === "film") {
+        ctx.fillStyle = "#fff";
+        const holeWidth = 30;
+        const holeHeight = 25;
+        const borderRadius = 5;
 
-      for (let i = 40; i < canvas.height - 40; i += 80) {
-        ctx.beginPath();
-        ctx.roundRect(10, i, holeWidth, holeHeight, borderRadius);
-        ctx.fill();
+        for (let i = 40; i < canvas.height - 40; i += 80) {
+          // Left side
+          ctx.beginPath();
+          ctx.roundRect(
+            adjustedOffsetX + 10,
+            i,
+            holeWidth,
+            holeHeight,
+            borderRadius
+          );
+          ctx.fill();
 
-        ctx.beginPath();
-        ctx.roundRect(
-          canvas.width - 35,
-          i,
-          holeWidth,
-          holeHeight,
-          borderRadius
-        );
-        ctx.fill();
-      }
-    } else {
-      ctx.fillStyle = stripColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    let imagesLoaded = 0;
-    capturedImages.forEach((image, index) => {
-      const img = new Image();
-      img.src = image;
-      img.onload = () => {
-        if (!ctx) return;
-        const yOffset = borderSize + (imgHeight + photoSpacing) * index;
-
-        const imageRatio = img.width / img.height;
-        const targetRatio = imgWidth / imgHeight;
-
-        let sourceWidth = img.width;
-        let sourceHeight = img.height;
-        let sourceX = 0;
-        let sourceY = 0;
-
-        if (imageRatio > targetRatio) {
-          sourceWidth = sourceHeight * targetRatio;
-          sourceX = (img.width - sourceWidth) / 2;
-        } else {
-          sourceHeight = sourceWidth / targetRatio;
-          sourceY = (img.height - sourceHeight) / 2;
+          // Right side
+          ctx.beginPath();
+          ctx.roundRect(
+            adjustedOffsetX + imgWidth + borderSize * 2 - 40,
+            i,
+            holeWidth,
+            holeHeight,
+            borderRadius
+          );
+          ctx.fill();
         }
+      }
 
-        ctx.drawImage(
-          img,
-          sourceX,
-          sourceY,
-          sourceWidth,
-          sourceHeight,
-          borderSize,
-          yOffset,
-          imgWidth,
-          imgHeight
-        );
+      let imagesLoaded = 0;
+      capturedImages.forEach((image, index) => {
+        const img = new Image();
+        img.src = image;
+        img.onload = () => {
+          if (!ctx) return;
+          const yOffset = borderSize + (imgHeight + photoSpacing) * index;
 
-        if (
-          frames[selectedFrame] &&
-          typeof frames[selectedFrame].draw === "function"
-        ) {
-          frames[selectedFrame].draw(
-            ctx,
-            borderSize,
+          // Scale and center the image within the frame
+          const imageRatio = img.width / img.height;
+          const targetRatio = imgWidth / imgHeight;
+
+          let sourceWidth = img.width;
+          let sourceHeight = img.height;
+          let sourceX = 0;
+          let sourceY = 0;
+
+          if (imageRatio > targetRatio) {
+            sourceWidth = sourceHeight * targetRatio;
+            sourceX = (img.width - sourceWidth) / 2;
+          } else {
+            sourceHeight = sourceWidth / targetRatio;
+            sourceY = (img.height - sourceHeight) / 2;
+          }
+
+          // Draw the image
+          ctx.drawImage(
+            img,
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            adjustedOffsetX + borderSize,
             yOffset,
             imgWidth,
             imgHeight
           );
-        }
 
-        imagesLoaded++;
-        if (imagesLoaded === numShots) {
-          const now = new Date();
-          const timestamp = now.toLocaleDateString("en-US", {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-          });
-
-          ctx.fillStyle =
-            stripColor === "black" || stripColor === "film"
-              ? "#FFFFFF"
-              : "#000000";
-          ctx.font = "16px Arial";
-          ctx.textAlign = "center";
-          ctx.letterSpacing = "2px";
-
-          ctx.fillText(timestamp, canvas.width / 2, totalHeight - borderSize);
-
-          if (textInput) {
-            ctx.fillStyle =
-              stripColor === "black" || stripColor === "film"
-                ? "#FFFFFF"
-                : "#000000";
-            ctx.font = "italic bold 20px Arial";
-            ctx.textAlign = "center";
-            ctx.letterSpacing = "2px";
-            ctx.fillText(
-              textInput,
-              canvas.width / 2,
-              totalHeight - borderSize - 30
+          // Draw frame (if selected)
+          if (
+            frames[selectedFrame] &&
+            typeof frames[selectedFrame].draw === "function"
+          ) {
+            frames[selectedFrame].draw(
+              ctx,
+              adjustedOffsetX + borderSize,
+              yOffset,
+              imgWidth,
+              imgHeight
             );
           }
-        }
-      };
-    });
-  }, [capturedImages, stripColor, selectedFrame, textInput]);
+
+          imagesLoaded++;
+          if (imagesLoaded === numShots) {
+            const textPositionY =
+              totalHeight - borderSize - (showDate ? 30 : 0);
+
+            // Draw date
+            if (showDate) {
+              const now = new Date();
+              const timestamp = now.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              });
+
+              ctx.fillStyle =
+                stripColor === "black" || stripColor === "film"
+                  ? "#FFFFFF"
+                  : "#000000";
+              ctx.font = "16px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(
+                timestamp,
+                adjustedOffsetX + imgWidth / 2 + borderSize,
+                totalHeight - borderSize
+              );
+            }
+
+            // Draw custom text
+            if (textInput) {
+              ctx.fillStyle =
+                stripColor === "black" || stripColor === "film"
+                  ? "#FFFFFF"
+                  : "#000000";
+              
+              // Apply dynamic font size
+              ctx.font = `${isItalic ? "italic" : ""} ${isBold ? "bold" : ""} ${fontSize}px ${selectedFont}`;
+              ctx.textAlign = "left";
+            
+              const letterSpacing = 1; // Fixed letter spacing
+              let x =
+                adjustedOffsetX +
+                imgWidth / 2 +
+                borderSize -
+                (ctx.measureText(textInput).width + (textInput.length - 1) * letterSpacing) / 2; // Center the text with spacing considered
+            
+              for (let i = 0; i < textInput.length; i++) {
+                ctx.fillText(textInput[i], x, textPositionY);
+                x += ctx.measureText(textInput[i]).width + letterSpacing; // Add width of each letter + fixed spacing
+              }
+            }
+            
+            
+          }
+        };
+      });
+    };
+
+    // Draw single or double strip without a gap
+    drawStrip(0);
+    if (isDuplicate) drawStrip(imgWidth + borderSize * 2, true); // Removed left border for the second strip
+  }, [
+    capturedImages,
+    stripColor,
+    selectedFrame,
+    textInput,
+    showDate,
+    isBold,
+    isItalic,
+    isDuplicate,
+    selectedFont,
+    fontSize
+  ]);
 
   useEffect(() => {
     if (capturedImages && capturedImages.length === numShots) {
@@ -655,6 +728,14 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const handleEmojiClick = (emojiObject: { emoji: any }) => {
     setTextInput((prev: any) => prev + emojiObject.emoji);
     setShowPicker(false);
+  };
+
+  const handleFontChange = (value: string) => {
+    setSelectedFont(value);
+  };
+
+  const handleFontSizeChange = (value: string) => {
+    setFontSize(Number(value));
   };
 
   const sendPhotoStripToEmail = async () => {
@@ -1019,15 +1100,20 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
           <p className="text-xs tracking-wider leading-3 text-black-100 dark:text-primary-foreground  mt-4">
             Custom Text
           </p>
-          <div className="relative flex items-center w-full max-w-md my-6">
+          <div className="relative flex items-center w-full max-w-md mt-6 gap-2">
             {/* Input with emoji button inside */}
             <div className="relative w-full">
               <Input
                 type="text"
                 placeholder="Type something..."
                 value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                className="w-full px-4 py-2  rounded-md bg-white text-black"
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_LENGTH) {
+                    setTextInput(e.target.value);
+                  }
+                }}
+                maxLength={MAX_LENGTH}
+                className="w-full px-4 py-2 rounded-md bg-white text-black"
               />
               <button
                 onClick={() => setShowPicker((prev) => !prev)}
@@ -1036,6 +1122,33 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 <FaSmile size={20} />
               </button>
             </div>
+            {/* Bold Toggle */}
+            <Button
+              variant={"ghost"}
+              className="bg-accent rounded-none border dark:border-none"
+              onClick={toggleBold}
+              style={{ padding: "5px" }}
+            >
+              {isBold ? (
+                <BiBold className="text-red-500" size={24} />
+              ) : (
+                <BiBold className="text-black dark:text-white" size={24} />
+              )}
+            </Button>
+
+            {/* Italic Toggle */}
+            <Button
+              variant={"ghost"}
+              className="bg-accent rounded-none border dark:border-none"
+              onClick={toggleItalic}
+              style={{ padding: "5px" }}
+            >
+              {isItalic ? (
+                <BiItalic className="text-red-500" size={24} />
+              ) : (
+                <BiItalic className="text-black dark:text-white" size={24} />
+              )}
+            </Button>
 
             {/* Emoji Picker */}
             {showPicker && (
@@ -1043,6 +1156,146 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
+          </div>
+          {/* Character Counter */}
+          <div className="text-xs text-black-200 dark:text-white-100 mb-6 mt-1 pl-1">
+            {textInput.length}/{MAX_LENGTH}
+          </div>
+          <p className="text-xs tracking-wider leading-3 text-black-100 dark:text-primary-foreground  mb-4">
+            Font Style
+          </p>
+          <div className="flex items-center gap-2 mb-6">
+            <Select value={selectedFont} onValueChange={handleFontChange}>
+              <SelectTrigger className="w-[180px] border border-gray-300 bg-white text-black dark:bg-accent dark:text-white">
+                <SelectValue placeholder="Select Font" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-accent border border-gray-300 dark:border-gray-700">
+                {/* Standard Fonts */}
+                <SelectItem
+                  value="Poppins"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                >
+                  Poppins
+                </SelectItem>
+                <SelectItem
+                  value="Arial"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                >
+                  Arial
+                </SelectItem>
+                <SelectItem
+                  value="Courier New"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                >
+                  Courier New
+                </SelectItem>
+                <SelectItem
+                  value="Verdana"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                >
+                  Verdana
+                </SelectItem>
+                <SelectItem
+                  value="Times New Roman"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                >
+                  Times New Roman
+                </SelectItem>
+
+                {/* Calligraphy and Handwriting Fonts */}
+                <SelectItem
+                  value="Brush Script MT"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Brush Script MT]"
+                >
+                  Brush Script MT (Calligraphy)
+                </SelectItem>
+                <SelectItem
+                  value="Pacifico"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Pacifico]"
+                >
+                  Pacifico (Handwriting)
+                </SelectItem>
+
+                {/* Decorative and Cursive Fonts */}
+                <SelectItem
+                  value="Lobster"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Lobster]"
+                >
+                  Lobster (Decorative)
+                </SelectItem>
+                <SelectItem
+                  value="Dancing Script"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Dancing Script]"
+                >
+                  Dancing Script (Cursive)
+                </SelectItem>
+
+                {/* Classic Fonts */}
+                <SelectItem
+                  value="Georgia"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Georgia]"
+                >
+                  Georgia (Serif)
+                </SelectItem>
+                <SelectItem
+                  value="Comic Sans MS"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Comic Sans MS]"
+                >
+                  Comic Sans MS (Casual)
+                </SelectItem>
+                <SelectItem
+                  value="Impact"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Impact]"
+                >
+                  Impact (Bold)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={String(fontSize)}
+              onValueChange={handleFontSizeChange}
+            >
+              <SelectTrigger className="w-[100px] border border-gray-300 bg-white text-black dark:bg-accent dark:text-white">
+                <SelectValue placeholder="Font Size" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-accent border border-gray-300 dark:border-gray-700">
+                <SelectItem value="12">12px</SelectItem>
+                <SelectItem value="14">14px</SelectItem>
+                <SelectItem value="16">16px</SelectItem>
+                <SelectItem value="18">18px</SelectItem>
+                <SelectItem value="20">20px</SelectItem>
+                <SelectItem value="24">24px</SelectItem>
+                <SelectItem value="28">28px</SelectItem>
+                <SelectItem value="32">32px</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2 mb-6">
+            <Checkbox
+              id="showDate"
+              checked={showDate}
+              onCheckedChange={(checked) => setShowDate(!!checked)}
+            />
+            <label
+              htmlFor="terms"
+              className="text-xs text-black-100 dark:text-white font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Show Date
+            </label>
+
+            <Checkbox
+              id="duplicateStrip"
+              checked={isDuplicate}
+              onCheckedChange={(checked) => setIsDuplicate(!!checked)}
+            />
+            <label
+              htmlFor="duplicateStrip"
+              className="text-xs text-black-100 dark:text-white font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Duplicate Strip
+            </label>
           </div>
           <div className="flex items-center gap-4 pb-6">
             <Button onClick={downloadPhotoStrip}>

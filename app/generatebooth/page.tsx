@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useCapturedImages } from "@/context/CapturedImagesContext";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RiFlipHorizontalFill, RiFlipHorizontalLine } from "react-icons/ri";
+
+import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import { IoIosColorFilter } from "react-icons/io";
 import { FiCamera, FiCameraOff } from "react-icons/fi";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -15,107 +17,151 @@ import {
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@radix-ui/react-tabs";
+import {
+  FaAdjust,
+  FaSlidersH,
+  FaThermometerHalf,
+  FaMagic,
+  FaCompress,
+} from "react-icons/fa";
+import { CiBrightnessUp } from "react-icons/ci";
+import { MdExposure } from "react-icons/md";
+import { BsHighlights } from "react-icons/bs";
+import { IoTriangleOutline } from "react-icons/io5";
+import {
+  RiFlipHorizontalFill,
+  RiFlipHorizontalLine,
+  RiResetLeftFill,
+} from "react-icons/ri";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const filters = [
   { name: "No Filter", value: "none" },
-  { name: "Grayscale", value: "grayscale(100%)", slider: "grayscale" },
+  {
+    name: "Fresh",
+    value: "brightness(110%) saturate(115%) contrast(105%)",
+    slider: "fresh",
+  },
+  {
+    name: "Clear",
+    value: "contrast(125%) brightness(108%) saturate(105%)",
+    slider: "clear",
+  },
+  {
+    name: "Warm",
+    value: "sepia(20%) brightness(108%) contrast(110%)",
+    slider: "warm",
+  },
+  {
+    name: "Film",
+    value: "contrast(105%) brightness(98%) saturate(92%)",
+    slider: "film",
+  },
+  {
+    name: "Modern Gold",
+    value: "sepia(42%) brightness(108%) contrast(115%) hue-rotate(25deg)",
+    slider: "modernGold",
+  },
+  { name: "B&W", value: "grayscale(100%) contrast(125%)", slider: "bw" },
+  { name: "Contrast", value: "contrast(155%)", slider: "contrast" },
+  { name: "Gray", value: "grayscale(100%)", slider: "gray" },
+  {
+    name: "Cool",
+    value: "hue-rotate(220deg) brightness(98%) contrast(108%)",
+    slider: "cool",
+  },
   {
     name: "Vintage",
-    value:
-      "grayscale(100%) contrast(120%) brightness(110%) sepia(30%) hue-rotate(10deg) blur(0.4px)",
+    value: "sepia(40%) contrast(115%) brightness(102%) saturate(88%)",
     slider: "vintage",
   },
-  { name: "Sepia", value: "sepia(100%)", slider: "sepia" },
   {
-    name: "Soft",
-    value: "brightness(130%) contrast(105%) saturate(80%) blur(0.3px)",
-    slider: "soft",
-  },
-  { name: "Invert", value: "invert(100%)", slider: "invert" },
-  { name: "High Contrast", value: "contrast(200%)", slider: "contrast" },
-  { name: "Hue Rotate", value: "hue-rotate(90deg)", slider: "hue" },
-  { name: "Blur", value: "blur(3px)", slider: "blur" },
-  {
-    name: "Warm Glow",
-    value: "sepia(40%) brightness(110%) contrast(120%)",
-    slider: "warmGlow",
+    name: "Fade",
+    value: "grayscale(30%) brightness(105%) contrast(92%)",
+    slider: "fade",
   },
   {
-    name: "Cool Tone",
-    value: "hue-rotate(200deg) brightness(90%) contrast(110%)",
-    slider: "coolTone",
+    name: "Mist",
+    value: "brightness(103%) contrast(97%) blur(0.5px)",
+    slider: "mist",
   },
   {
-    name: "Dramatic",
-    value: "contrast(150%) brightness(80%) saturate(130%)",
-    slider: "dramatic",
+    name: "Food",
+    value: "saturate(135%) contrast(112%) brightness(105%)",
+    slider: "food",
   },
   {
-    name: "Retro",
-    value: "sepia(50%) contrast(120%) brightness(105%) saturate(90%)",
-    slider: "retro",
+    name: "Autumn",
+    value: "sepia(35%) hue-rotate(25deg) brightness(108%) contrast(112%)",
+    slider: "autumn",
   },
   {
-    name: "Night Vision",
-    value: "invert(100%) hue-rotate(120deg) brightness(130%)",
-    slider: "nightVision",
+    name: "City",
+    value: "contrast(120%) brightness(98%) saturate(108%)",
+    slider: "city",
   },
   {
-    name: "Dreamy",
-    value: "blur(2px) brightness(120%) saturate(110%)",
-    slider: "dreamy",
+    name: "Country",
+    value: "sepia(25%) brightness(106%) contrast(110%)",
+    slider: "country",
+  },
+  {
+    name: "Sunset",
+    value: "hue-rotate(20deg) brightness(108%) contrast(115%)",
+    slider: "sunset",
+  },
+  {
+    name: "Voyage",
+    value: "hue-rotate(215deg) brightness(97%) contrast(110%)",
+    slider: "voyage",
+  },
+  {
+    name: "Forest",
+    value: "hue-rotate(130deg) brightness(97%) contrast(108%)",
+    slider: "forest",
+  },
+  {
+    name: "Flamingo",
+    value: "hue-rotate(340deg) saturate(140%) brightness(108%)",
+    slider: "flamingo",
   },
   {
     name: "Cyberpunk",
-    value: "hue-rotate(300deg) contrast(130%) brightness(90%) saturate(150%)",
+    value: "hue-rotate(310deg) contrast(135%) brightness(95%) saturate(140%)",
     slider: "cyberpunk",
   },
-  {
-    name: "Faded",
-    value: "grayscale(40%) brightness(110%) contrast(90%)",
-    slider: "faded",
-  },
-  {
-    name: "Deep Blue",
-    value: "hue-rotate(220deg) contrast(120%) brightness(95%) saturate(130%)",
-    slider: "deepBlue",
-  },
-  {
-    name: "Golden Hour",
-    value: "sepia(50%) brightness(110%) contrast(115%)",
-    slider: "goldenHour",
-  },
-  {
-    name: "Cinematic",
-    value: "contrast(140%) brightness(85%) saturate(90%)",
-    slider: "cinematic",
-  },
-  {
-    name: "Pastel",
-    value: "saturate(90%) brightness(115%) contrast(95%)",
-    slider: "pastel",
-  },
-  {
-    name: "Shadow",
-    value: "brightness(85%) contrast(120%)",
-    slider: "shadow",
-  },
-  {
-    name: "Muted",
-    value: "saturate(70%) brightness(105%) contrast(95%)",
-    slider: "muted",
-  },
-  {
-    name: "Vibrant",
-    value: "saturate(140%) contrast(120%) brightness(110%)",
-    slider: "vibrant",
-  },
-  {
-    name: "Frosted",
-    value: "blur(3px) brightness(110%)",
-    slider: "frosted",
-  },
 ];
+
+const ICONS = {
+  brightness: <CiBrightnessUp size={16} />,
+  contrast: <FaAdjust size={12} />,
+  saturation: <FaSlidersH size={12} />,
+  exposure: <MdExposure size={12} />,
+  highlights: <BsHighlights size={12} />,
+  colorTemperature: <FaThermometerHalf size={12} />,
+  tone: <FaCompress size={12} />,
+  sharpness: <IoTriangleOutline size={12} />,
+};
+
+type Adjustments = Record<
+  | "brightness"
+  | "contrast"
+  | "saturation"
+  | "exposure"
+  | "highlights"
+  | "colorTemperature"
+  | "tone"
+  | "sharpness",
+  number
+>;
 
 const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
@@ -123,6 +169,7 @@ const GenerateBooth: React.FC = () => {
   const pathname = usePathname();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const flashRef = useRef<HTMLDivElement | null>(null);
   const [capturedImages, setImages] = useState<string[]>([]);
   const [filter, setFilter] = useState<string>("none");
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -133,9 +180,35 @@ const GenerateBooth: React.FC = () => {
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState<number>(100);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [filterValues, setFilterValues] = useState<Record<string, number>>({});
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null); // Currently selected filter for slider
+  const [filterValues, setFilterValues] = useState<Record<string, number>>({}); // Store slider values for each filter
   const [captureProgress, setCaptureProgress] = useState<string | null>(null);
+  const [countdownTime, setCountdownTime] = useState<number>(3);
+
+  const [adjustments, setAdjustments] = useState<Adjustments>({
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+    exposure: 0,
+    highlights: 0,
+    colorTemperature: 0,
+    tone: 0,
+    sharpness: 0,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [autoAdjustments, setAutoAdjustments] = useState<Adjustments>({
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+    exposure: 0,
+    highlights: 0,
+    colorTemperature: 0,
+    tone: 0,
+    sharpness: 0,
+  });
+
+  const [autoValue, setAutoValue] = useState<number>(50);
 
   useEffect(() => {
     getCameras();
@@ -221,7 +294,22 @@ const GenerateBooth: React.FC = () => {
     }
   }, [cameraOn, selectedDeviceId, startCamera]);
 
-  // Countdown to take 4 pictures automatically
+  // Function to trigger the flash effect
+  const triggerFlash = () => {
+    if (flashRef.current) {
+      flashRef.current.style.opacity = "1";
+      flashRef.current.style.animation = "none";
+      void flashRef.current.offsetWidth;
+      flashRef.current.style.animation = "flash 0.2s ease-in-out";
+
+      setTimeout(() => {
+        if (flashRef.current) {
+          flashRef.current.style.opacity = "0";
+        }
+      }, 200);
+    }
+  };
+
   const startCountdown = () => {
     if (capturing) return;
     setCapturing(true);
@@ -248,23 +336,29 @@ const GenerateBooth: React.FC = () => {
         return;
       }
 
-      let timeLeft = 3;
+      let timeLeft = countdownTime; // ✅ Use countdownTime instead of numShots
       setCountdown(timeLeft);
 
       const timer = setInterval(() => {
         timeLeft -= 1;
-        setCountdown(timeLeft);
-
-        if (timeLeft === 0) {
+        if (timeLeft > 0) {
+          setCountdown(timeLeft);
+        } else {
           clearInterval(timer);
-          const imageUrl = capturePhoto();
-          if (imageUrl) {
-            newCapturedImages.push(imageUrl);
-            setImages((prevImages) => [...prevImages, imageUrl]);
-          }
-          photosTaken += 1;
-          setCaptureProgress(`Capturing ${photosTaken}/${numShots}`);
-          setTimeout(captureSequence, 1000);
+          setCountdown(null);
+
+          setTimeout(() => {
+            triggerFlash();
+            const imageUrl = capturePhoto();
+            if (imageUrl) {
+              newCapturedImages.push(imageUrl);
+              setImages((prevImages) => [...prevImages, imageUrl]);
+            }
+            photosTaken += 1;
+            setCaptureProgress(`Capturing ${photosTaken}/${numShots}`);
+
+            setTimeout(captureSequence, 1000);
+          }, 200);
         }
       }, 1000);
     };
@@ -329,151 +423,279 @@ const GenerateBooth: React.FC = () => {
     }
   };
 
+  const resetAutoAdjustments = () => {
+    setAutoAdjustments({
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      exposure: 0,
+      highlights: 0,
+      colorTemperature: 0,
+      tone: 0,
+      sharpness: 0,
+    });
+    setAutoValue(0);
+    setSelectedFilter(null);
+
+    applyAdjustments(adjustments, {
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      exposure: 0,
+      highlights: 0,
+      colorTemperature: 0,
+      tone: 0,
+      sharpness: 0,
+    });
+  };
+
+  const resetAllAdjustments = () => {
+    const defaultAdjustments: Adjustments = {
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      exposure: 0,
+      highlights: 0,
+      colorTemperature: 0,
+      tone: 0,
+      sharpness: 0,
+    };
+
+    setAdjustments(defaultAdjustments);
+    setAutoAdjustments(defaultAdjustments);
+    setAutoValue(0);
+    setSelectedFilter(null);
+    setSliderValue(0);
+
+    applyAdjustments(defaultAdjustments, defaultAdjustments);
+  };
+
+  const handleAdjustmentChange = (key: keyof Adjustments, value: number) => {
+    resetAutoAdjustments();
+
+    setAdjustments((prev) => {
+      const newAdjustments = { ...prev, [key]: value };
+      applyAdjustments(newAdjustments, {
+        brightness: 0,
+        contrast: 0,
+        saturation: 0,
+        exposure: 0,
+        highlights: 0,
+        colorTemperature: 0,
+        tone: 0,
+        sharpness: 0,
+      });
+      return newAdjustments;
+    });
+
+    setSelectedFilter(key);
+    setSliderValue(value);
+  };
+
+  const handleAutoAdjust = (value: number) => {
+    const scale = value / 100;
+    const autoValues: Adjustments = {
+      brightness: -20 * scale,
+      contrast: 22 * scale,
+      saturation: 27 * scale,
+      exposure: 15 * scale,
+      highlights: -50 * scale,
+      colorTemperature: 0,
+      tone: 0,
+      sharpness: 0,
+    };
+
+    setAdjustments({
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      exposure: 0,
+      highlights: 0,
+      colorTemperature: 0,
+      tone: 0,
+      sharpness: 0,
+    });
+
+    setAutoAdjustments(autoValues);
+    setAutoValue(value);
+    setSelectedFilter("auto");
+
+    applyAdjustments(
+      {
+        brightness: 0,
+        contrast: 0,
+        saturation: 0,
+        exposure: 0,
+        highlights: 0,
+        colorTemperature: 0,
+        tone: 0,
+        sharpness: 0,
+      },
+      autoValues
+    );
+  };
+
+  const toggleAuto = () => {
+    if (selectedFilter === "auto") {
+      resetAutoAdjustments();
+    } else {
+      handleAutoAdjust(50);
+    }
+  };
+
+  const applyAdjustments = (
+    adjustments: Adjustments,
+    autoAdjustments: Adjustments
+  ) => {
+    const filterString = `
+    brightness(${100 + adjustments.brightness + autoAdjustments.brightness}%)
+    contrast(${100 + adjustments.contrast + autoAdjustments.contrast}%)
+    saturate(${100 + adjustments.saturation + autoAdjustments.saturation}%)
+    grayscale(${Math.abs(adjustments.exposure + autoAdjustments.exposure)}%)
+    sepia(${Math.abs(adjustments.highlights + autoAdjustments.highlights)}%)
+    hue-rotate(${
+      adjustments.colorTemperature + autoAdjustments.colorTemperature
+    }deg)
+    invert(${Math.abs(adjustments.tone + autoAdjustments.tone)}%)
+    opacity(${
+      100 - Math.abs(adjustments.sharpness + autoAdjustments.sharpness)
+    }%)
+  `;
+    setFilter(filterString);
+  };
+
   const applyFilter = (filterType: string, value: number) => {
     switch (filterType) {
-      case "grayscale":
+      case "fresh":
+        setFilter(
+          `brightness(${100 + value / 10}%) saturate(${
+            100 + value / 5
+          }%) contrast(${100 + value / 10}%)`
+        );
+        break;
+      case "clear":
+        setFilter(
+          `contrast(${100 + value / 2}%) brightness(${
+            100 + value / 10
+          }%) saturate(${100 + value / 5}%)`
+        );
+        break;
+      case "warm":
+        setFilter(
+          `sepia(${value / 3}%) brightness(${100 + value / 10}%) contrast(${
+            100 + value / 10
+          }%)`
+        );
+        break;
+      case "film":
+        setFilter(
+          `contrast(${100 + value / 5}%) brightness(${
+            100 - value / 10
+          }%) saturate(${100 - value / 10}%)`
+        );
+        break;
+      case "modernGold":
+        setFilter(
+          `sepia(${value / 2}%) brightness(${100 + value / 10}%) contrast(${
+            100 + value / 5
+          }%) hue-rotate(${value / 2}deg)`
+        );
+        break;
+      case "bw":
+        setFilter(`grayscale(${value}%) contrast(${100 + value / 2}%)`);
+        break;
+      case "gray":
         setFilter(`grayscale(${value}%)`);
         break;
-      case "sepia":
-        setFilter(`sepia(${value}%)`);
+      case "cool":
+        setFilter(
+          `hue-rotate(${200 + value / 2}deg) brightness(${
+            100 - value / 10
+          }%) contrast(${100 + value / 10}%)`
+        );
         break;
       case "vintage":
         setFilter(
-          `grayscale(${value}%) contrast(${100 + value / 2}%) brightness(${
-            100 + value / 5
-          }%) sepia(${value / 3}%) hue-rotate(${value / 10}deg) blur(${
-            value / 250
-          }px)`
+          `sepia(${value / 2}%) contrast(${100 + value / 5}%) brightness(${
+            100 + value / 10
+          }%) saturate(${100 - value / 10}%)`
         );
         break;
-      case "soft":
+      case "fade":
         setFilter(
-          `brightness(${100 + value / 3}%) contrast(${
-            100 + value / 5
-          }%) saturate(${value}%) blur(${value / 250}px)`
+          `grayscale(${value / 2}%) brightness(${100 + value / 10}%) contrast(${
+            100 - value / 10
+          }%)`
         );
         break;
-      case "invert":
-        setFilter(`invert(${value}%)`);
+      case "mist":
+        setFilter(
+          `brightness(${100 + value / 10}%) contrast(${100 - value / 10}%)`
+        );
         break;
-      case "contrast":
-        setFilter(`contrast(${value * 2}%)`);
+      case "food":
+        setFilter(
+          `saturate(${100 + value / 2}%) contrast(${
+            100 + value / 10
+          }%) brightness(${100 + value / 10}%)`
+        );
         break;
-      case "blur":
-        setFilter(`blur(${value / 20}px)`);
+      case "autumn":
+        setFilter(
+          `sepia(${value / 3}%) hue-rotate(${value / 2}deg) brightness(${
+            100 + value / 10
+          }%) contrast(${100 + value / 10}%)`
+        );
         break;
-      case "hue":
-        setFilter(`hue-rotate(${value}deg)`);
+      case "city":
+        setFilter(
+          `contrast(${100 + value / 2}%) brightness(${
+            100 - value / 10
+          }%) saturate(${100 + value / 5}%)`
+        );
+        break;
+      case "country":
+        setFilter(
+          `sepia(${value / 3}%) brightness(${100 + value / 10}%) contrast(${
+            100 + value / 10
+          }%)`
+        );
+        break;
+      case "sunset":
+        setFilter(
+          `hue-rotate(${value / 2}deg) brightness(${
+            100 + value / 10
+          }%) contrast(${100 + value / 5}%)`
+        );
+        break;
+      case "voyage":
+        setFilter(
+          `hue-rotate(${220 + value / 2}deg) brightness(${
+            100 - value / 10
+          }%) contrast(${100 + value / 10}%)`
+        );
+        break;
+      case "forest":
+        setFilter(
+          `hue-rotate(${130 + value / 2}deg) brightness(${
+            97 - value / 10
+          }%) contrast(${108 + value / 10}%)`
+        );
         break;
 
-      // New Filters
-      case "warmGlow":
+      case "flamingo":
         setFilter(
-          `sepia(${value / 2}%) brightness(${100 + value / 5}%) contrast(${
-            100 + value / 4
-          }%)`
-        );
-        break;
-      case "coolTone":
-        setFilter(
-          `hue-rotate(${180 + value / 2}deg) brightness(${
-            90 + value / 5
-          }%) contrast(${100 + value / 4}%)`
-        );
-        break;
-      case "dramatic":
-        setFilter(
-          `contrast(${100 + value}%) brightness(${80 + value / 5}%) saturate(${
+          `hue-rotate(${330 + value / 2}deg) saturate(${
             100 + value / 2
-          }%)`
-        );
-        break;
-      case "retro":
-        setFilter(
-          `sepia(${value / 2}%) contrast(${100 + value / 3}%) brightness(${
-            100 + value / 4
-          }%) saturate(${100 - value / 4}%)`
-        );
-        break;
-      case "nightVision":
-        setFilter(
-          `invert(100%) hue-rotate(${120 + value / 2}deg) brightness(${
-            100 + value / 4
-          }%)`
-        );
-        break;
-      case "dreamy":
-        setFilter(
-          `blur(${value / 30}px) brightness(${100 + value / 5}%) saturate(${
-            100 + value / 4
-          }%)`
+          }%) brightness(${100 + value / 10}%)`
         );
         break;
       case "cyberpunk":
         setFilter(
           `hue-rotate(${300 + value / 2}deg) contrast(${
-            100 + value / 3
-          }%) brightness(${100 - value / 4}%) saturate(${100 + value / 2}%)`
+            100 + value / 2
+          }%) brightness(${100 - value / 10}%) saturate(${100 + value / 2}%)`
         );
-        break;
-      case "faded":
-        setFilter(
-          `grayscale(${value / 2}%) brightness(${100 + value / 5}%) contrast(${
-            100 - value / 5
-          }%)`
-        );
-        break;
-
-      // More New Filters
-      case "deepBlue":
-        setFilter(
-          `hue-rotate(${220 + value / 3}deg) contrast(${
-            100 + value / 3
-          }%) brightness(${90 + value / 4}%) saturate(${100 + value / 2}%)`
-        );
-        break;
-      case "goldenHour":
-        setFilter(
-          `sepia(${50 + value / 2}%) brightness(${105 + value / 5}%) contrast(${
-            110 + value / 4
-          }%)`
-        );
-        break;
-      case "cinematic":
-        setFilter(
-          `contrast(${120 + value / 2}%) brightness(${
-            90 + value / 5
-          }%) saturate(${100 - value / 4}%)`
-        );
-        break;
-      case "pastel":
-        setFilter(
-          `saturate(${80 + value / 3}%) brightness(${
-            110 + value / 4
-          }%) contrast(${90 + value / 4}%)`
-        );
-        break;
-      case "shadow":
-        setFilter(
-          `brightness(${80 + value / 5}%) contrast(${110 + value / 3}%)`
-        );
-        break;
-      case "muted":
-        setFilter(
-          `saturate(${80 - value / 3}%) brightness(${
-            100 + value / 5
-          }%) contrast(${90 + value / 5}%)`
-        );
-        break;
-      case "vibrant":
-        setFilter(
-          `saturate(${120 + value / 3}%) contrast(${
-            110 + value / 4
-          }%) brightness(${105 + value / 5}%)`
-        );
-        break;
-      case "frosted":
-        setFilter(`blur(${value / 15}px) brightness(${105 + value / 5}%)`);
         break;
       default:
         setFilter("none");
@@ -495,16 +717,24 @@ const GenerateBooth: React.FC = () => {
           {/* Camera Feed */}
           <div className="flex justify-center items-center w-full max-w-[37.5rem] lg:max-w-[43.75rem] h-64 sm:h-80 md:h-96 relative pt-2">
             {cameraOn ? (
-              <video
-                ref={videoRef}
-                playsInline
-                autoPlay
-                className="video-feed w-full h-full object-cover  rounded-lg"
-                style={{
-                  filter,
-                  transform: isMirrored ? "scaleX(-1)" : "none",
-                }}
-              />
+              <>
+                {/* Video Feed */}
+                <video
+                  ref={videoRef}
+                  playsInline
+                  autoPlay
+                  className="video-feed w-full h-full object-cover rounded-lg"
+                  style={{
+                    filter,
+                    transform: isMirrored ? "scaleX(-1)" : "none",
+                  }}
+                />
+                {/* White Flash Overlay */}
+                <div
+                  ref={flashRef}
+                  className="absolute inset-0 w-full h-full bg-white opacity-0 pointer-events-none rounded-lg"
+                ></div>
+              </>
             ) : (
               <div className="w-[22rem] sm:w-[26rem] md:w-[30rem] h-full flex items-center justify-center text-white text-xl md:text-2xl bg-gray-800 rounded-lg">
                 Camera Off
@@ -512,41 +742,75 @@ const GenerateBooth: React.FC = () => {
             )}
             <canvas ref={canvasRef} className="hidden" />
             {countdown !== null && (
-              <h2 className="absolute inset-0 flex items-center justify-center text-white text-4xl md:text-6xl font-bold animate-pulse">
-                {countdown}
-              </h2>
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Shutter Effect */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-60 h-60 sm:w-72 sm:h-72 md:w-80 md:h-80 bg-white rounded-full animate-shutter"></div>
+                </div>
+                {/* Countdown Number */}
+                <h2 className="relative text-white text-6xl md:text-8xl font-bold animate-pulse">
+                  {countdown}
+                </h2>
+              </div>
             )}
           </div>
 
           {/* Camera Controls */}
-          <div className="flex flex-wrap justify-center mx-auto gap-2 my-4 md:my-6">
-            {cameraOn && (
-              <>
-                <Button
-                  onClick={startCountdown}
-                  disabled={capturing}
-                  variant="outline"
-                  className="bg-gray-300 dark:bg-white dark:text-black-100"
-                >
-                  {capturing ? captureProgress : "Start Capture"}
-                </Button>
+          <div className="flex justify-between items-center w-full my-4 md:my-6">
+            {/* Left Side Controls */}
+            <div className="flex items-center gap-2">
+              {/* Countdown Dropdown - Positioned to the left */}
+              {cameraOn && (
+                <>
+                  <Select
+                    value={String(countdownTime)}
+                    onValueChange={(value) => setCountdownTime(Number(value))}
+                    disabled={capturing}
+                  >
+                    <SelectTrigger className="w-16">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10s</SelectItem>
+                      <SelectItem value="5">5s</SelectItem>
+                      <SelectItem value="3">3s</SelectItem>
+                      <SelectItem value="2">2s</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                <Button onClick={toggleMirror} disabled={capturing}>
-                  {isMirrored ? (
-                    <RiFlipHorizontalFill />
-                  ) : (
-                    <RiFlipHorizontalLine />
-                  )}
-                </Button>
-              </>
-            )}
+                  {/* Start Capture Button */}
+                  <Button
+                    onClick={startCountdown}
+                    disabled={capturing}
+                    variant="outline"
+                    className="bg-gray-300 dark:bg-white dark:text-black-100"
+                  >
+                    {capturing ? captureProgress : "Start Capture"}
+                  </Button>
+
+                  {/* Mirror Button */}
+                  <Button onClick={toggleMirror} className="bg-accent" variant={"ghost"} disabled={capturing}>
+                    {isMirrored ? (
+                      <RiFlipHorizontalFill />
+                    ) : (
+                      <RiFlipHorizontalLine />
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Right Side - Camera On/Off Button */}
             <Button
               onClick={() => setCameraOn((prev) => !prev)}
               disabled={capturing}
+              className="ml-auto dark:border bg-accent"
+              variant={"ghost"}
             >
               {cameraOn ? <FiCameraOff /> : <FiCamera />}
             </Button>
           </div>
+
           <div className="flex justify-center items-center mx-auto gap-2">
             {[1, 2, 3, 4].map((shot) => (
               <Button
@@ -554,8 +818,8 @@ const GenerateBooth: React.FC = () => {
                 onClick={() => setNumShots(shot)}
                 className={
                   numShots === shot
-                    ? "bg-primary text-white"
-                    : "bg-gray-300 text-black-100"
+                    ? "bg-primary text-white text-xs"
+                    : "bg-gray-300 text-black-100 text-xs"
                 }
                 disabled={capturing}
               >
@@ -588,58 +852,217 @@ const GenerateBooth: React.FC = () => {
         )}
       </div>
 
-      {/* Filter Section */}
-      <div className="text-center my-5 max-w-4xl">
-        <p className="text-sm font-medium dark:text-white text-black-100">Choose a filter!</p>
-
-        <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
-          <ScrollArea className="w-full max-w-lg rounded-md border">
-            <div className="w-max space-x-4 p-4">
-              {filters.map((item) => (
-                <Popover key={item.name}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      onClick={() => {
-                        const savedValue =
-                          filterValues[item.slider as string] ?? 100;
-                        setSelectedFilter(item.slider || null);
-                        setSliderValue(savedValue);
-                        applyFilter(item.slider as string, savedValue);
-                      }}
-                      className={`min-w-[100px] ${
-                        selectedFilter === item.slider
-                          ? "bg-white text-black"
-                          : ""
-                      }`}
-                      disabled={capturing}
-                    >
-                      {item.name}
-                    </Button>
-                  </PopoverTrigger>
-                  {item.slider && (
+      <Tabs defaultValue="adjust" className="w-[350px] my-10 mx-8">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger
+            value="adjust"
+            className="flex items-center gap-2 text-xs"
+          >
+            <HiOutlineAdjustmentsHorizontal />
+            Adjust
+          </TabsTrigger>
+          <TabsTrigger
+            value="filters"
+            className="flex items-center gap-2 text-xs"
+          >
+            <IoIosColorFilter />
+            Filters
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="filters">
+          {/* Filter Section */}
+          <div className="text-center my-5 max-w-4xl">
+            <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
+              <ScrollArea className="w-full max-w-lg rounded-md border">
+                <div className="w-max space-x-4 p-4">
+                  {filters.map((item) => (
+                    <Popover key={item.name}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          onClick={() => {
+                            const savedValue =
+                              filterValues[item.slider as string] ?? 100;
+                            setSelectedFilter(item.slider || null);
+                            setSliderValue(savedValue);
+                            applyFilter(item.slider as string, savedValue);
+                          }}
+                          className={`min-w-[100px] ${
+                            selectedFilter === item.slider
+                              ? "bg-white text-black"
+                              : ""
+                          }`}
+                          disabled={capturing}
+                        >
+                          {item.name}
+                        </Button>
+                      </PopoverTrigger>
+                      {item.slider && (
+                        <PopoverContent className="w-48">
+                          <p className="text-sm font-medium flex justify-between">
+                            {item.name} Intensity
+                            <span className="text-gray-500 text-xs">
+                              {sliderValue}%
+                            </span>
+                          </p>
+                          <Slider
+                            value={[sliderValue]}
+                            onValueChange={(val) => handleSliderChange(val[0])}
+                            min={0}
+                            max={100}
+                            step={1}
+                          />
+                        </PopoverContent>
+                      )}
+                    </Popover>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="adjust">
+          <div className="text-center my-2 max-w-4xl">
+            <div className="flex justify-end items-center w-full">
+              <Button
+                onClick={resetAllAdjustments}
+                className="text-sm px-3 py-1 rounded-md"
+                variant={"ghost"}
+                disabled={capturing}
+              >
+                <RiResetLeftFill />
+              </Button>
+            </div>
+            <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
+              <ScrollArea className="w-full max-w-lg rounded-md border">
+                <div className="flex w-max gap-8 p-4 ">
+                  {/* Auto Adjustment Button */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={toggleAuto}
+                        className="flex flex-col items-center gap-2"
+                        disabled={capturing}
+                      >
+                        <div
+                          className={`w-10 h-10 flex items-center justify-center rounded-full transition border ${
+                            selectedFilter === "auto" && autoValue !== 0
+                              ? "bg-black-100 dark:bg-white"
+                              : "bg-gray-300 dark:bg-accent hover:bg-gray-400 dark:hover:bg-gray-600"
+                          }`}
+                        >
+                          <span
+                            className={`${
+                              selectedFilter === "auto" && autoValue !== 0
+                                ? "text-white dark:text-black-100"
+                                : "text-black-100 dark:text-white "
+                            } text-xl`}
+                          >
+                            <FaMagic size={12} />
+                          </span>
+                        </div>
+                        <span className="text-xs text-black dark:text-white">
+                          Auto
+                        </span>
+                      </button>
+                    </PopoverTrigger>
                     <PopoverContent className="w-48">
                       <p className="text-sm font-medium flex justify-between">
-                        {item.name} Intensity
+                        Auto Adjust
                         <span className="text-gray-500 text-xs">
-                          {sliderValue}%
+                          {autoValue}
                         </span>
                       </p>
                       <Slider
-                        value={[sliderValue]}
-                        onValueChange={(val) => handleSliderChange(val[0])}
+                        value={[autoValue]}
+                        onValueChange={(val) => handleAutoAdjust(val[0])}
                         min={0}
                         max={100}
                         step={1}
                       />
                     </PopoverContent>
-                  )}
-                </Popover>
-              ))}
+                  </Popover>
+
+                  {/* Individual Adjustment Buttons + Sliders */}
+                  {Object.entries(adjustments).map(([key, value]) => (
+                    <Popover key={key}>
+                      <PopoverTrigger asChild>
+                        <button
+                          disabled={capturing}
+                          onClick={() => {
+                            if (selectedFilter === key) {
+                              setSelectedFilter(null);
+                            } else {
+                              handleAdjustmentChange(
+                                key as keyof Adjustments,
+                                value
+                              );
+                            }
+                          }}
+                          className={`flex flex-col items-center gap-2`}
+                        >
+                          <div
+                            className={`w-10 h-10 flex items-center justify-center rounded-full transition border ${
+                              value !== 0
+                                ? "bg-black-100 dark:bg-white"
+                                : "bg-gray-300 dark:bg-accent hover:bg-gray-400 dark:hover:bg-gray-600"
+                            }`}
+                          >
+                            <span
+                              className={`${
+                                value !== 0
+                                  ? "text-white dark:text-black-100"
+                                  : "text-black dark:text-white"
+                              } text-xl`}
+                            >
+                              {ICONS[key as keyof Adjustments]}
+                            </span>
+                          </div>
+                          <span className="text-xs text-black dark:text-white text-center">
+                            {key === "colorTemperature" ? (
+                              <>
+                                <span className="block">Color</span>
+                                <span className="block">Temperature</span>
+                              </>
+                            ) : (
+                              key.charAt(0).toUpperCase() + key.slice(1)
+                            )}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      {selectedFilter === key && (
+                        <PopoverContent className="w-48">
+                          <p className="text-sm font-medium flex justify-between">
+                            {key.charAt(0).toUpperCase() + key.slice(1)}
+                            <span className="text-gray-500 text-xs">
+                              {sliderValue}
+                            </span>
+                          </p>
+                          <Slider
+                            value={[sliderValue]}
+                            onValueChange={(val) => {
+                              handleAdjustmentChange(
+                                key as keyof Adjustments,
+                                val[0]
+                              );
+                              setSliderValue(val[0]);
+                            }}
+                            min={key === "sharpness" ? 0 : -100}
+                            max={key === "sharpness" ? 100 : 100}
+                            step={1}
+                          />
+                        </PopoverContent>
+                      )}
+                    </Popover>
+                  ))}
+                </div>
+                {/* Fix ScrollBar Visibility */}
+                <ScrollBar orientation="horizontal" className="mt-2" />
+              </ScrollArea>
             </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

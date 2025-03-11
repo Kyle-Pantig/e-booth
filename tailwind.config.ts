@@ -85,6 +85,14 @@ const config = {
       //   sm: "calc(var(--radius) - 4px)",
       // },
       keyframes: {
+        shutter: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0' },
+          '50%': { transform: 'scale(0)', opacity: '1' },
+        },
+        flash: {
+          '0%, 100%': { opacity: '0' },
+          '50%': { opacity: '1' },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -156,10 +164,12 @@ const config = {
         spotlight: "spotlight 2s ease .75s 1 forwards",
         shimmer: "shimmer 2s linear infinite",
         first: "moveVertical 30s ease infinite",
+        flash: 'flash 0.2s ease-in-out',
         second: "moveInCircle 20s reverse infinite",
         third: "moveInCircle 40s linear infinite",
         fourth: "moveHorizontal 40s ease infinite",
         fifth: "moveInCircle 20s ease infinite",
+        shutter: 'shutter 1s ease-in-out infinite',
         scroll:
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
       },
