@@ -259,6 +259,16 @@ const GenerateBooth: React.FC = () => {
   
         // Explicitly request camera permission
         await navigator.mediaDevices.getUserMedia({ video: true });
+        const permissionStatus = await navigator.permissions.query({
+          name: "camera" as PermissionName,
+        });
+
+        if (permissionStatus.state === "denied") {
+          alert(
+            "Camera access is denied. Please enable it in your browser settings."
+          );
+          return;
+        }
   
         const constraints = deviceId
           ? {
