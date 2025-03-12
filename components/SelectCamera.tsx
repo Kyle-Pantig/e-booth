@@ -10,13 +10,13 @@ import {
     CommandItem, 
     CommandList 
   } from "@/components/ui/command";
-  
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Device {
   deviceId: string;
@@ -35,26 +35,30 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
   const [open, setOpen] = useState<boolean>(false);
   const [devices, setDevices] = useState<Device[]>([]);
 
-  useEffect(() => {
-    const getDevices = async () => {
-      try {
-        const deviceInfos = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = deviceInfos
-          .filter((device) => device.kind === "videoinput")
-          .map((device, index) => ({
-            deviceId: device.deviceId,
-            label: device.label || `Camera ${index + 1}`,
-          }));
-
-        setDevices(videoDevices);
-      } catch (error) {
-        console.error("Error fetching devices:", error);
+  const getCameras = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(
+        (device) => device.kind === "videoinput"
+      );
+      setDevices(videoDevices);
+      if (videoDevices.length > 0) {
+        setSelectedDeviceId(
+          selectedDeviceId && videoDevices.some((device) => device.deviceId === selectedDeviceId)
+            ? selectedDeviceId
+            : videoDevices[0].deviceId
+        );
       }
-    };
-
-    getDevices();
-  }, []);
-
+      
+    } catch (error) {
+      console.error("Error fetching cameras:", error);
+    }
+  }, [selectedDeviceId, setSelectedDeviceId]);
+  
+  useEffect(() => {
+    getCameras(); 
+  }, [getCameras]);
+  
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

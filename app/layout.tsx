@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     "capture memories",
     "e booth vercel",
     "e-booth vercel",
+    "digibooth",
+    "photobooth",
+    "online photobooth",
   ],
   title: {
     default: "E-Booth | Capture & Share Memories Instantly",
@@ -45,7 +48,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png", 
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "E-Booth - Capture & Share Memories Instantly",
@@ -53,7 +56,6 @@ export const metadata: Metadata = {
     ],
   },
 };
-
 
 export default function RootLayout({
   children,
@@ -103,9 +105,7 @@ export default function RootLayout({
             <ModeToggle />
             <Spotlight />
             <div className="flex-grow flex justify-center items-center relative">
-              <CapturedImagesProvider>
-                {children}
-              </CapturedImagesProvider>
+              <CapturedImagesProvider>{children}</CapturedImagesProvider>
             </div>
             <Footer />
             <Toaster richColors />

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Config } from "tailwindcss";
-
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { fontFamily } = require('tailwindcss/defaultTheme')
 import svgToDataUri from "mini-svg-data-uri";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -27,6 +28,20 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Poppins', ...fontFamily.sans],
+        poppins: ['Poppins', 'sans-serif'],
+        pacifico: ['Pacifico', 'cursive'],
+        lobster: ['Lobster', 'cursive'],
+        dancing: ['Dancing Script', 'cursive'],
+        brush: ['"Brush Script MT"', 'cursive'],
+        georgia: ['Georgia', 'serif'],
+        impact: ['Impact', 'sans-serif'],
+        comic: ['"Comic Sans MS"', 'cursive'],
+        arial: ['Arial', 'sans-serif'],
+        courier: ['"Courier New"', 'monospace'],
+        times: ['"Times New Roman"', 'serif'],
+      },
       colors: {
         black: {
           DEFAULT: "#000",

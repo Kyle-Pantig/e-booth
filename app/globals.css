@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Lobster&family=Dancing+Script&display=swap');
-
+@import url("https://fonts.googleapis.com/css2?family=Pacifico&family=Lobster&family=Dancing+Script&family=Noto+Color+Emoji&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,7 +9,6 @@
     text-wrap: balance;
   }
 }
-
 
 @layer base {
   :root {
@@ -69,7 +67,6 @@
   }
 }
 
-
 @layer base {
   * {
     @apply border-border;
@@ -78,4 +75,3 @@
     @apply bg-background text-foreground;
   }
 }
-

@@ -475,7 +475,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const [isBold, setIsBold] = useState<boolean>(false);
   const [isItalic, setIsItalic] = useState<boolean>(false);
   const [isDuplicate, setIsDuplicate] = useState<boolean>(false);
-  const [selectedFont, setSelectedFont] = useState<string>("Poppins");
+  const [selectedFont, setSelectedFont] = useState<string>("Arial");
   const [fontSize, setFontSize] = useState<number>(20);
 
   const toggleBold = () => setIsBold((prev) => !prev);
@@ -649,25 +649,22 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 stripColor === "black" || stripColor === "film"
                   ? "#FFFFFF"
                   : "#000000";
-              
-              // Apply dynamic font size
-              ctx.font = `${isItalic ? "italic" : ""} ${isBold ? "bold" : ""} ${fontSize}px ${selectedFont}`;
-              ctx.textAlign = "left";
-            
-              const letterSpacing = 1; // Fixed letter spacing
-              let x =
-                adjustedOffsetX +
-                imgWidth / 2 +
-                borderSize -
-                (ctx.measureText(textInput).width + (textInput.length - 1) * letterSpacing) / 2; // Center the text with spacing considered
-            
-              for (let i = 0; i < textInput.length; i++) {
-                ctx.fillText(textInput[i], x, textPositionY);
-                x += ctx.measureText(textInput[i]).width + letterSpacing; // Add width of each letter + fixed spacing
-              }
+
+              // Set font once to avoid per-character font setting issues
+              ctx.font = `${isItalic ? "italic" : ""} ${
+                isBold ? "bold" : ""
+              } ${fontSize}px ${selectedFont}, sans-serif`;
+
+              ctx.textAlign = "center"; // Center alignment
+              ctx.textBaseline = "middle"; // Vertically align to middle (optional)
+
+              // Center text horizontally and vertically
+              const x = adjustedOffsetX + imgWidth / 2 + borderSize;
+              const y = textPositionY;
+
+              // Draw the whole text string at once to avoid spacing issues
+              ctx.fillText(textInput, x, y);
             }
-            
-            
           }
         };
       });
@@ -686,7 +683,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
     isItalic,
     isDuplicate,
     selectedFont,
-    fontSize
+    fontSize,
   ]);
 
   useEffect(() => {
@@ -725,9 +722,29 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
     link.click();
   };
 
-  const handleEmojiClick = (emojiObject: { emoji: any }) => {
-    setTextInput((prev: any) => prev + emojiObject.emoji);
-    setShowPicker(false);
+  const countCharacters = (text: string) => {
+    if ("Segmenter" in Intl) {
+      const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+      return [...segmenter.segment(text)].length;
+    }
+    // Fallback to Array.from if Segmenter is not supported
+    return Array.from(text.normalize("NFC")).length;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+
+    if (countCharacters(input) <= MAX_LENGTH) {
+      setTextInput(input);
+    }
+  };
+
+  const handleEmojiClick = (emojiObject: { emoji: string }) => {
+    const newText = textInput + emojiObject.emoji;
+
+    if (countCharacters(newText) <= MAX_LENGTH) {
+      setTextInput(newText);
+    }
   };
 
   const handleFontChange = (value: string) => {
@@ -1107,13 +1124,8 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 type="text"
                 placeholder="Type something..."
                 value={textInput}
-                onChange={(e) => {
-                  if (e.target.value.length <= MAX_LENGTH) {
-                    setTextInput(e.target.value);
-                  }
-                }}
-                maxLength={MAX_LENGTH}
-                className="w-full px-4 py-2 rounded-md bg-white text-black"
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 rounded-md bg-white text-black "
               />
               <button
                 onClick={() => setShowPicker((prev) => !prev)}
@@ -1159,7 +1171,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
           </div>
           {/* Character Counter */}
           <div className="text-xs text-black-200 dark:text-white-100 mb-6 mt-1 pl-1">
-            {textInput.length}/{MAX_LENGTH}
+            {countCharacters(textInput)}/{MAX_LENGTH}
           </div>
           <p className="text-xs tracking-wider leading-3 text-black-100 dark:text-primary-foreground  mb-4">
             Font Style
@@ -1171,33 +1183,33 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-accent border border-gray-300 dark:border-gray-700">
                 {/* Standard Fonts */}
-                <SelectItem
+                {/* <SelectItem
                   value="Poppins"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-poppins"
                 >
                   Poppins
-                </SelectItem>
+                </SelectItem> */}
                 <SelectItem
                   value="Arial"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-arial"
                 >
                   Arial
                 </SelectItem>
                 <SelectItem
                   value="Courier New"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-courier"
                 >
                   Courier New
                 </SelectItem>
                 <SelectItem
                   value="Verdana"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-verdana"
                 >
                   Verdana
                 </SelectItem>
                 <SelectItem
                   value="Times New Roman"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-times"
                 >
                   Times New Roman
                 </SelectItem>
@@ -1205,13 +1217,13 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 {/* Calligraphy and Handwriting Fonts */}
                 <SelectItem
                   value="Brush Script MT"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Brush Script MT]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-brush"
                 >
                   Brush Script MT (Calligraphy)
                 </SelectItem>
                 <SelectItem
                   value="Pacifico"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Pacifico]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-pacifico"
                 >
                   Pacifico (Handwriting)
                 </SelectItem>
@@ -1219,13 +1231,13 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 {/* Decorative and Cursive Fonts */}
                 <SelectItem
                   value="Lobster"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Lobster]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-lobster"
                 >
                   Lobster (Decorative)
                 </SelectItem>
                 <SelectItem
                   value="Dancing Script"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Dancing Script]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-dancing"
                 >
                   Dancing Script (Cursive)
                 </SelectItem>
@@ -1233,19 +1245,19 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 {/* Classic Fonts */}
                 <SelectItem
                   value="Georgia"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Georgia]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-georgia"
                 >
                   Georgia (Serif)
                 </SelectItem>
                 <SelectItem
                   value="Comic Sans MS"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Comic Sans MS]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-comic"
                 >
                   Comic Sans MS (Casual)
                 </SelectItem>
                 <SelectItem
                   value="Impact"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-[Impact]"
+                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-impact"
                 >
                   Impact (Bold)
                 </SelectItem>
@@ -1279,7 +1291,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
               onCheckedChange={(checked) => setShowDate(!!checked)}
             />
             <label
-              htmlFor="terms"
+              htmlFor="showDate"
               className="text-xs text-black-100 dark:text-white font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               Show Date
@@ -1328,11 +1340,14 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
               className="flex items-center gap-2 w-full"
             >
               <Input
+                id="email-input"
+                name="email"
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-white text-black-100 dark:bg-white dark:text-black-100 border border-black-100 rounded-md px-4 py-2"
+                autoComplete="email"
               />
               <Button type="submit">Send to Email</Button>
             </form>
