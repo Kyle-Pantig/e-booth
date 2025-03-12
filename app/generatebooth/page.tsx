@@ -163,6 +163,11 @@ type Adjustments = Record<
   number
 >;
 
+interface Device {
+  deviceId: string;
+  label: string;
+}
+
 const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
@@ -175,7 +180,7 @@ const GenerateBooth: React.FC = () => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturing, setCapturing] = useState<boolean>(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
@@ -210,6 +215,22 @@ const GenerateBooth: React.FC = () => {
 
   const [autoValue, setAutoValue] = useState<number>(50);
 
+  const getCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(
+        (device) => device.kind === "videoinput"
+      );
+      setDevices(videoDevices);
+
+      if (videoDevices.length > 0) {
+        setSelectedDeviceId(videoDevices[0].deviceId);
+      }
+    } catch (error) {
+      console.error("Error fetching cameras:", error);
+    }
+  };
+
   useEffect(() => {
     getCameras();
   }, []);
@@ -222,33 +243,15 @@ const GenerateBooth: React.FC = () => {
     }
   }, [pathname]);
 
-  const getCameras = async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(
-        (device) => device.kind === "videoinput"
-      );
-      setDevices(videoDevices);
-      if (videoDevices.length > 0) {
-        setSelectedDeviceId(videoDevices[0].deviceId);
-      }
-    } catch (error) {
-      console.error("Error fetching cameras:", error);
-    }
-  };
-
   const startCamera = useCallback(
     async (deviceId: string) => {
       try {
         if (pathname !== "/generatebooth") return;
 
-        // Stop any existing camera stream to prevent conflicts
         stopCamera();
 
-        // Explicitly request permission to trigger the browser prompt
         await navigator.mediaDevices.getUserMedia({ video: true });
 
-        // Check if camera permission is granted
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
         });
@@ -260,7 +263,6 @@ const GenerateBooth: React.FC = () => {
           return;
         }
 
-        // Apply video constraints using the selected device
         const constraints = {
           video: {
             deviceId: { exact: deviceId },
@@ -270,10 +272,7 @@ const GenerateBooth: React.FC = () => {
           },
         };
 
-        // Get camera stream
-        const newStream = await navigator.mediaDevices.getUserMedia(
-          constraints
-        );
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
 
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
@@ -286,7 +285,7 @@ const GenerateBooth: React.FC = () => {
         );
       }
     },
-    [pathname, videoRef]
+    [pathname, videoRef] 
   );
 
   const stopCamera = () => {
@@ -297,9 +296,10 @@ const GenerateBooth: React.FC = () => {
     }
   };
 
+  // ✅ Restart camera when selectedDeviceId changes
   useEffect(() => {
     if (cameraOn && selectedDeviceId) {
-      startCamera(selectedDeviceId);
+      startCamera(selectedDeviceId); // ✅ Start new stream on selection change
     } else {
       stopCamera();
     }

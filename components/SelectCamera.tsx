@@ -35,6 +35,7 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
   const [open, setOpen] = useState<boolean>(false);
   const [devices, setDevices] = useState<Device[]>([]);
 
+  // ✅ Fetch available cameras and update state
   const getCameras = useCallback(async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -45,24 +46,26 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
       setDevices(videoDevices);
 
       if (videoDevices.length > 0) {
-        const newDeviceId =
-          selectedDeviceId &&
-          videoDevices.some((device) => device.deviceId === selectedDeviceId)
-            ? selectedDeviceId
-            : videoDevices[0].deviceId;
-
-        setSelectedDeviceId(newDeviceId);
+        // ✅ If the current selected camera is not available, reset to the first camera
+        if (
+          !selectedDeviceId ||
+          !videoDevices.some((device) => device.deviceId === selectedDeviceId)
+        ) {
+          setSelectedDeviceId(videoDevices[0].deviceId);
+        }
       }
     } catch (error) {
       console.error("Error fetching cameras:", error);
     }
   }, [selectedDeviceId, setSelectedDeviceId]);
 
+  // ✅ Handle camera selection properly
   const handleSelectCamera = (deviceId: string) => {
     setSelectedDeviceId(deviceId);
     setOpen(false);
   };
 
+  // ✅ Fetch cameras on mount and when the selected device changes
   useEffect(() => {
     getCameras();
   }, [getCameras]);
@@ -92,7 +95,7 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
                 <CommandItem
                   key={device.deviceId}
                   value={device.deviceId}
-                  onSelect={() => handleSelectCamera(device.deviceId)} // ✅ Using handleSelectCamera
+                  onSelect={() => handleSelectCamera(device.deviceId)}
                 >
                   {device.label}
                   <Check
