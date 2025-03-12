@@ -163,11 +163,6 @@ type Adjustments = Record<
   number
 >;
 
-interface Device {
-  deviceId: string;
-  label: string;
-}
-
 const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
@@ -179,8 +174,6 @@ const GenerateBooth: React.FC = () => {
   const [filter, setFilter] = useState<string>("none");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturing, setCapturing] = useState<boolean>(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
@@ -221,7 +214,6 @@ const GenerateBooth: React.FC = () => {
       const videoDevices = devices.filter(
         (device) => device.kind === "videoinput"
       );
-      setDevices(videoDevices);
 
       if (videoDevices.length > 0) {
         setSelectedDeviceId(videoDevices[0].deviceId);
@@ -250,7 +242,7 @@ const GenerateBooth: React.FC = () => {
 
         stopCamera();
 
-        await navigator.mediaDevices.getUserMedia({ video: true });
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
@@ -272,7 +264,9 @@ const GenerateBooth: React.FC = () => {
           },
         };
 
-        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const newStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
 
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
@@ -285,7 +279,7 @@ const GenerateBooth: React.FC = () => {
         );
       }
     },
-    [pathname, videoRef] 
+    [pathname, videoRef]
   );
 
   const stopCamera = () => {
@@ -296,7 +290,6 @@ const GenerateBooth: React.FC = () => {
     }
   };
 
-  // ✅ Restart camera when selectedDeviceId changes
   useEffect(() => {
     if (cameraOn && selectedDeviceId) {
       startCamera(selectedDeviceId); // ✅ Start new stream on selection change
