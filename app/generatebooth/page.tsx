@@ -334,16 +334,19 @@ const GenerateBooth: React.FC = () => {
         try {
           setCapturedImages([...newCapturedImages]);
           setImages([...newCapturedImages]);
-          setTimeout(() => {
-            router.push("/photopreview");
-          }, 200);
+
+          stopCamera();
+
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          router.push("/photopreview");
         } catch (error) {
           console.error("Error navigating to preview:", error);
         }
         return;
       }
 
-      let timeLeft = countdownTime; // ✅ Use countdownTime instead of numShots
+      let timeLeft = countdownTime;
       setCountdown(timeLeft);
 
       const timer = setInterval(() => {
@@ -364,6 +367,7 @@ const GenerateBooth: React.FC = () => {
             photosTaken += 1;
             setCaptureProgress(`Capturing ${photosTaken}/${numShots}`);
 
+            // ✅ Recursively call to capture the next photo
             setTimeout(captureSequence, 1000);
           }, 200);
         }
