@@ -248,41 +248,31 @@ const GenerateBooth: React.FC = () => {
   }, [pathname]);
 
   const startCamera = useCallback(
-    async (deviceId: string) => {
+    async (deviceId?: string) => {
       try {
         if (pathname !== "/generatebooth") return;
-
+  
         stopCamera();
-        // Explicitly request permission to trigger the browser prompt
+  
+        // Add a short delay to allow the browser to release the previous stream
+        await new Promise((resolve) => setTimeout(resolve, 100));
+  
+        // Explicitly request camera permission
         await navigator.mediaDevices.getUserMedia({ video: true });
-
-        // Check if camera permission is granted
-        const permissionStatus = await navigator.permissions.query({
-          name: "camera" as PermissionName,
-        });
-
-        if (permissionStatus.state === "denied") {
-          alert(
-            "Camera access is denied. Please enable it in your browser settings."
-          );
-          return;
-        }
-
-        // Apply video constraints using the selected device
-        const constraints = {
-          video: {
-            deviceId: { exact: deviceId },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            frameRate: { ideal: 30 },
-          },
-        };
-
-        // Get camera stream
-        const newStream = await navigator.mediaDevices.getUserMedia(
-          constraints
-        );
-
+  
+        const constraints = deviceId
+          ? {
+              video: {
+                deviceId: { exact: deviceId },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 },
+              },
+            }
+          : { video: true };
+  
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+  
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
           await videoRef.current.play();
