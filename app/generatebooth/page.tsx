@@ -216,7 +216,7 @@ const GenerateBooth: React.FC = () => {
       const videoDevices = devices.filter(
         (device) => device.kind === "videoinput"
       );
-  
+
       if (videoDevices.length > 0) {
         setSelectedDeviceId(videoDevices[0].deviceId);
       }
@@ -224,16 +224,15 @@ const GenerateBooth: React.FC = () => {
       console.error("Error fetching cameras:", error);
     }
   };
-  
+
   useEffect(() => {
     if (pathname === "/generatebooth") {
-      getCameras(); 
+      getCameras();
       setCameraOn(true);
     } else {
       setCameraOn(false);
     }
   }, [pathname]);
-  
 
   useEffect(() => {
     getCameras();
@@ -248,17 +247,14 @@ const GenerateBooth: React.FC = () => {
   }, [pathname]);
 
   const startCamera = useCallback(
-    async (deviceId?: string) => {
+    async (deviceId: string) => {
       try {
         if (pathname !== "/generatebooth") return;
-  
+
         stopCamera();
-  
-        // Add a short delay to allow the browser to release the previous stream
+
         await new Promise((resolve) => setTimeout(resolve, 100));
-  
-        // Explicitly request camera permission
-        await navigator.mediaDevices.getUserMedia({ video: true });
+
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
         });
@@ -269,20 +265,20 @@ const GenerateBooth: React.FC = () => {
           );
           return;
         }
-  
-        const constraints = deviceId
-          ? {
-              video: {
-                deviceId: { exact: deviceId },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-                frameRate: { ideal: 30 },
-              },
-            }
-          : { video: true };
-  
-        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-  
+
+        const constraints = {
+          video: {
+            deviceId: { exact: deviceId },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 },
+          },
+        };
+
+        const newStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
+
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
           await videoRef.current.play();
@@ -734,7 +730,7 @@ const GenerateBooth: React.FC = () => {
                   ref={videoRef}
                   playsInline
                   autoPlay
-                  className="video-feed w-full h-full object-cover rounded-lg"
+                  className="video-feed w-[20rem] md:w-[30rem] h-full object-cover rounded-lg"
                   style={{
                     filter,
                     transform: isMirrored ? "scaleX(-1)" : "none",
@@ -800,7 +796,12 @@ const GenerateBooth: React.FC = () => {
                   </Button>
 
                   {/* Mirror Button */}
-                  <Button onClick={toggleMirror} className="bg-accent" variant={"ghost"} disabled={capturing}>
+                  <Button
+                    onClick={toggleMirror}
+                    className="bg-accent"
+                    variant={"ghost"}
+                    disabled={capturing}
+                  >
                     {isMirrored ? (
                       <RiFlipHorizontalFill />
                     ) : (
