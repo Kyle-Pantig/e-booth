@@ -174,6 +174,8 @@ const GenerateBooth: React.FC = () => {
   const [filter, setFilter] = useState<string>("none");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturing, setCapturing] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
@@ -251,9 +253,10 @@ const GenerateBooth: React.FC = () => {
         if (pathname !== "/generatebooth") return;
 
         stopCamera();
+        // Explicitly request permission to trigger the browser prompt
+        await navigator.mediaDevices.getUserMedia({ video: true });
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
+        // Check if camera permission is granted
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
         });
@@ -265,6 +268,7 @@ const GenerateBooth: React.FC = () => {
           return;
         }
 
+        // Apply video constraints using the selected device
         const constraints = {
           video: {
             deviceId: { exact: deviceId },
@@ -274,6 +278,7 @@ const GenerateBooth: React.FC = () => {
           },
         };
 
+        // Get camera stream
         const newStream = await navigator.mediaDevices.getUserMedia(
           constraints
         );
@@ -292,17 +297,9 @@ const GenerateBooth: React.FC = () => {
     [pathname, videoRef]
   );
 
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  };
-
   useEffect(() => {
     if (cameraOn && selectedDeviceId) {
-      startCamera(selectedDeviceId); // ✅ Start new stream on selection change
+      startCamera(selectedDeviceId);
     } else {
       stopCamera();
     }
@@ -418,6 +415,15 @@ const GenerateBooth: React.FC = () => {
       return canvas.toDataURL("image/png");
     }
     return null;
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
   };
 
   const handleSliderChange = (value: number) => {
@@ -794,12 +800,7 @@ const GenerateBooth: React.FC = () => {
                   </Button>
 
                   {/* Mirror Button */}
-                  <Button
-                    onClick={toggleMirror}
-                    className="bg-accent"
-                    variant={"ghost"}
-                    disabled={capturing}
-                  >
+                  <Button onClick={toggleMirror} className="bg-accent" variant={"ghost"} disabled={capturing}>
                     {isMirrored ? (
                       <RiFlipHorizontalFill />
                     ) : (
