@@ -242,6 +242,9 @@ const GenerateBooth: React.FC = () => {
       try {
         if (pathname !== "/generatebooth") return;
 
+        // Stop any existing camera stream to prevent conflicts
+        stopCamera();
+
         // Explicitly request permission to trigger the browser prompt
         await navigator.mediaDevices.getUserMedia({ video: true });
 
@@ -285,6 +288,14 @@ const GenerateBooth: React.FC = () => {
     },
     [pathname, videoRef]
   );
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
 
   useEffect(() => {
     if (cameraOn && selectedDeviceId) {
@@ -404,15 +415,6 @@ const GenerateBooth: React.FC = () => {
       return canvas.toDataURL("image/png");
     }
     return null;
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
-    }
   };
 
   const handleSliderChange = (value: number) => {
@@ -789,7 +791,12 @@ const GenerateBooth: React.FC = () => {
                   </Button>
 
                   {/* Mirror Button */}
-                  <Button onClick={toggleMirror} className="bg-accent" variant={"ghost"} disabled={capturing}>
+                  <Button
+                    onClick={toggleMirror}
+                    className="bg-accent"
+                    variant={"ghost"}
+                    disabled={capturing}
+                  >
                     {isMirrored ? (
                       <RiFlipHorizontalFill />
                     ) : (

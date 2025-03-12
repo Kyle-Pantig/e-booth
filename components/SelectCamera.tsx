@@ -3,13 +3,13 @@
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { 
-    Command, 
-    CommandEmpty, 
-    CommandGroup, 
-    CommandItem, 
-    CommandList 
-  } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 import {
   Popover,
@@ -41,24 +41,32 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
       const videoDevices = devices.filter(
         (device) => device.kind === "videoinput"
       );
+
       setDevices(videoDevices);
+
       if (videoDevices.length > 0) {
-        setSelectedDeviceId(
-          selectedDeviceId && videoDevices.some((device) => device.deviceId === selectedDeviceId)
+        const newDeviceId =
+          selectedDeviceId &&
+          videoDevices.some((device) => device.deviceId === selectedDeviceId)
             ? selectedDeviceId
-            : videoDevices[0].deviceId
-        );
+            : videoDevices[0].deviceId;
+
+        setSelectedDeviceId(newDeviceId);
       }
-      
     } catch (error) {
       console.error("Error fetching cameras:", error);
     }
   }, [selectedDeviceId, setSelectedDeviceId]);
-  
+
+  const handleSelectCamera = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    setOpen(false);
+  };
+
   useEffect(() => {
-    getCameras(); 
+    getCameras();
   }, [getCameras]);
-  
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -84,10 +92,7 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
                 <CommandItem
                   key={device.deviceId}
                   value={device.deviceId}
-                  onSelect={() => {
-                    setSelectedDeviceId(device.deviceId);
-                    setOpen(false);
-                  }}
+                  onSelect={() => handleSelectCamera(device.deviceId)} // ✅ Using handleSelectCamera
                 >
                   {device.label}
                   <Check
