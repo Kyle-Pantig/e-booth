@@ -1310,15 +1310,17 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             <Button
               onClick={async () => {
                 try {
+                  const existingStream =
+                    await navigator.mediaDevices.getUserMedia({ video: true });
+                  existingStream.getTracks().forEach((track) => track.stop());
+
                   const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                      facingMode: "user", 
-                    },
+                    video: { facingMode: "user" }, 
                   });
+
                   stream.getTracks().forEach((track) => track.stop());
 
-                  router.replace("/generatebooth");
-                  setTimeout(() => window.location.reload(), 100); 
+                  router.push("/generatebooth");
                 } catch (error) {
                   console.error("Error accessing camera:", error);
                   alert("Please allow camera permissions to proceed.");
