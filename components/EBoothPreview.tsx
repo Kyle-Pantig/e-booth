@@ -1183,12 +1183,6 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-accent border border-gray-300 dark:border-gray-700">
                 {/* Standard Fonts */}
-                {/* <SelectItem
-                  value="Poppins"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-poppins"
-                >
-                  Poppins
-                </SelectItem> */}
                 <SelectItem
                   value="Arial"
                   className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-arial"
@@ -1316,8 +1310,11 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             <Button
               onClick={async () => {
                 try {
+                  // Stop all active tracks first
                   const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                    video: {
+                      facingMode: "user", // 'user' = front camera, 'environment' = back camera
+                    },
                   });
                   stream.getTracks().forEach((track) => track.stop());
 

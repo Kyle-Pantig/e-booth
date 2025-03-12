@@ -214,7 +214,7 @@ const GenerateBooth: React.FC = () => {
       const videoDevices = devices.filter(
         (device) => device.kind === "videoinput"
       );
-
+  
       if (videoDevices.length > 0) {
         setSelectedDeviceId(videoDevices[0].deviceId);
       }
@@ -222,6 +222,16 @@ const GenerateBooth: React.FC = () => {
       console.error("Error fetching cameras:", error);
     }
   };
+  
+  useEffect(() => {
+    if (pathname === "/generatebooth") {
+      getCameras(); 
+      setCameraOn(true);
+    } else {
+      setCameraOn(false);
+    }
+  }, [pathname]);
+  
 
   useEffect(() => {
     getCameras();
