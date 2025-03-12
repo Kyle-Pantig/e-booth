@@ -1312,6 +1312,14 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 try {
                   await new Promise((resolve) => setTimeout(resolve, 100));
 
+                  // Stop existing stream properly
+                  const existingStream =
+                    await navigator.mediaDevices.getUserMedia({ video: true });
+                  existingStream.getTracks().forEach((track) => {
+                    track.stop();
+                    track.enabled = false;
+                  });
+
                   const permissionStatus = await navigator.permissions.query({
                     name: "camera" as PermissionName,
                   });
@@ -1322,15 +1330,6 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                     );
                     return;
                   }
-
-                  const existingStream =
-                    await navigator.mediaDevices.getUserMedia({ video: true });
-                  existingStream.getTracks().forEach((track) => track.stop());
-
-                  const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" },
-                  });
-                  stream.getTracks().forEach((track) => track.stop());
 
                   router.push("/generatebooth");
                 } catch (error) {

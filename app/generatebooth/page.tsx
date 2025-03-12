@@ -413,11 +413,21 @@ const GenerateBooth: React.FC = () => {
     return null;
   };
 
+  // const stopCamera = () => {
+  //   if (videoRef.current && videoRef.current.srcObject) {
+  //     const stream = videoRef.current.srcObject as MediaStream;
+  //     const tracks = stream.getTracks();
+  //     tracks.forEach((track) => track.stop());
+  //     videoRef.current.srcObject = null;
+  //   }
+  // };
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach((track) => track.stop());
+      stream.getTracks().forEach((track) => {
+        track.stop();
+        track.enabled = false;
+      });
       videoRef.current.srcObject = null;
     }
   };
