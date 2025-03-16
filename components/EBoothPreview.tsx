@@ -756,39 +756,25 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   };
 
   const sendPhotoStripToEmail = async () => {
-    // Clear previous status
-    // setStatus("");
-
-    // Comprehensive email validation
     const validateEmail = (email: string) => {
-      // Basic format check
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) return false;
-
-      // Common typos and issues
-      if (email.includes("..") || email.endsWith(".") || email.startsWith("."))
-        return false;
+  
+      if (email.includes("..") || email.endsWith(".") || email.startsWith(".")) return false;
       if (email.includes("@@") || email.startsWith("@")) return false;
-
-      // Length checks
+  
       if (email.length < 5 || email.length > 254) return false;
-
-      // Domain part checks
+  
       const [localPart, domain] = email.split("@");
-      if (!domain || domain.length < 3) return false;
-      if (!domain.includes(".")) return false;
-
-      // Local part length check
+      if (!domain || domain.length < 3 || !domain.includes(".")) return false;
       if (localPart.length > 64) return false;
-
-      // TLD validation (must be at least 2 characters)
+  
       const tld = domain.split(".").pop();
       if (!tld || tld.length < 2) return false;
-
+  
       return true;
     };
-
-    // List of commonly mistyped domains and their corrections
+  
     const commonMisspellings: Record<string, string> = {
       "gmail.co": "gmail.com",
       "gmail.cm": "gmail.com",
@@ -802,8 +788,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       "outloo.com": "outlook.com",
       "outlok.com": "outlook.com",
     };
-
-    // Check and suggest corrections for common email misspellings
+  
     const checkForTypos = (
       email: string
     ): { hasTypo: boolean; suggestion: string } => {
@@ -814,43 +799,32 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
           suggestion: `${localPart}@${commonMisspellings[domain]}`,
         };
       }
-      return { hasTypo: false, suggestion: email }; // Ensure suggestion always returns a string
+      return { hasTypo: false, suggestion: email };
     };
-
+  
     if (!email) {
-      // setStatus("");
-      toast.error("Please enter an email address.", {
-        position: "bottom-right",
-        duration: 3000,
-      });
+      toast.error("Please enter an email address.", { position: "bottom-right", duration: 3000 });
       return;
     }
-
+  
     setSending(true);
-
-    // Check for common typos
+  
     const typoCheck = checkForTypos(email);
     if (typoCheck.hasTypo) {
       if (confirm(`Did you mean ${typoCheck.suggestion}?`)) {
         setEmail(typoCheck.suggestion);
-        // Continue with the corrected email
-      } else {
-        // User declined correction, continue with validation
       }
     }
-
+  
     if (!validateEmail(email)) {
-      toast.error(
-        "Please enter a valid email address. Example: name@example.com",
-        {
-          position: "bottom-right",
-          duration: 3000,
-        }
-      );
+      toast.error("Please enter a valid email address. Example: name@example.com", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+      setSending(false);
       return;
     }
-
-    // Blocked domains validation
+  
     const blockedDomains = [
       "mymail.lausd.net",
       "lausd.net",
@@ -858,33 +832,31 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       "undefined",
       "@undefined",
     ];
-
+  
     const domain = email.split("@")[1];
     if (blockedDomains.includes(domain) || domain.includes("undefined")) {
-      toast.error(
-        "This email domain is not supported. Please use a different email address.",
-        {
-          position: "bottom-right",
-          duration: 3000,
-        }
-      );
+      toast.error("This email domain is not supported. Please use a different email address.", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+      setSending(false);
       return;
     }
-
+  
+    let loadingToastId: string | number | null = null;
+  
     try {
-      const loadingToastId = toast.loading("Sending email...", {
-        position: "bottom-right",
-      });
-
-      // Small delay to prevent rate limiting
+      loadingToastId = toast.loading("Sending email...", { position: "bottom-right" });
+  
       await new Promise((resolve) => setTimeout(resolve, 500));
-
+  
       if (!stripCanvasRef.current) {
         console.error("Canvas reference is null");
-        toast.dismiss(loadingToastId); // Dismiss loading toast
+        if (loadingToastId) toast.dismiss(loadingToastId);
+        setSending(false);
         return;
       }
-
+  
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/send-photo-strip`,
         {
@@ -892,67 +864,60 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
           imageData: stripCanvasRef.current.toDataURL("image/jpeg", 0.7),
         }
       );
-      toast.dismiss(loadingToastId); // Dismiss loading toast after request
+  
+      if (loadingToastId) toast.dismiss(loadingToastId);
+  
+      // Add a small delay to let the state update before showing the toast
+      setTimeout(() => {
+        if (response.data.success) {
+          toast.success("Your E-Booth photo strip is sent! Check your inbox or spam.", {
+            position: "bottom-right",
+            duration: 3000,
+          });
+          setEmail("");
+        } else {
+          toast.error(`Failed to send: ${response.data.message || "Unknown error"}`, {
+            position: "bottom-right",
+            duration: 3000,
+          });
+        }
+      }, 100);
+  
       setSending(false);
-
-      if (response.data.success) {
-        toast.success(
-          "Your E-Booth photo strip is sent! Check your inbox or spam.",
-          {
-            position: "bottom-right",
-            duration: 3000,
-          }
-        );
-        setEmail(""); // Reset input field after success
-      } else {
-        toast.error(
-          `Failed to send: ${response.data.message || "Unknown error"}`,
-          {
-            position: "bottom-right",
-            duration: 3000,
-          }
-        );
-      }
     } catch (error: any) {
       console.error("Network Error Details:", {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
       });
-
-      toast.dismiss(); // Ensure any loading toast is closed
+  
+      if (loadingToastId) toast.dismiss(loadingToastId);
+  
+      setTimeout(() => {
+        if (error.response?.status === 400) {
+          toast.error(
+            `Error: ${error.response.data.message || "Invalid email address"}`,
+            { position: "bottom-right", duration: 3000 }
+          );
+        } else if (error.message.includes("Network Error")) {
+          toast.error("Network connection error. Please check your internet and try again.", {
+            position: "bottom-right",
+            duration: 3000,
+          });
+        } else {
+          toast.error(
+            `Error: ${
+              error.response?.data?.message || "Failed to send. Please try again later."
+            }`,
+            { position: "bottom-right", duration: 3000 }
+          );
+        }
+      }, 100);
+  
       setSending(false);
-
-      if (error.response?.status === 400) {
-        toast.error(
-          `Error: ${error.response.data.message || "Invalid email address"}`,
-          {
-            position: "bottom-right",
-            duration: 3000,
-          }
-        );
-      } else if (error.message.includes("Network Error")) {
-        toast.error(
-          "Network connection error. Please check your internet and try again.",
-          {
-            position: "bottom-right",
-            duration: 3000,
-          }
-        );
-      } else {
-        toast.error(
-          `Error: ${
-            error.response?.data?.message ||
-            "Failed to send. Please try again later."
-          }`,
-          {
-            position: "bottom-right",
-            duration: 3000,
-          }
-        );
-      }
     }
   };
+  
 
   return (
     <div

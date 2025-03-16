@@ -174,8 +174,6 @@ const GenerateBooth: React.FC = () => {
   const [filter, setFilter] = useState<string>("none");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturing, setCapturing] = useState<boolean>(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
@@ -556,6 +554,15 @@ const GenerateBooth: React.FC = () => {
     );
   };
 
+  const handleOpenChange = (key: keyof Adjustments, open: boolean) => {
+    if (open) {
+      setSelectedFilter(key);
+      setSliderValue(adjustments[key]);
+    } else {
+      setSelectedFilter(null);
+    }
+  };
+
   const toggleAuto = () => {
     if (selectedFilter === "auto") {
       resetAutoAdjustments();
@@ -746,9 +753,11 @@ const GenerateBooth: React.FC = () => {
                   autoPlay
                   className="video-feed w-[20rem] md:w-[30rem] h-full object-cover rounded-lg"
                   style={{
+                    WebkitFilter: filter, 
                     filter,
                     transform: isMirrored ? "scaleX(-1)" : "none",
                   }}
+                  
                 />
                 {/* White Flash Overlay */}
                 <div
@@ -1011,7 +1020,12 @@ const GenerateBooth: React.FC = () => {
 
                   {/* Individual Adjustment Buttons + Sliders */}
                   {Object.entries(adjustments).map(([key, value]) => (
-                    <Popover key={key}>
+                    <Popover
+                      key={key}
+                      onOpenChange={(open) =>
+                        handleOpenChange(key as keyof Adjustments, open)
+                      }
+                    >
                       <PopoverTrigger asChild>
                         <button
                           disabled={capturing}

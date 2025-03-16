@@ -75,3 +75,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+video {
+  -webkit-filter: brightness(100%) contrast(100%);
+  filter: brightness(100%) contrast(100%);
+}
+
