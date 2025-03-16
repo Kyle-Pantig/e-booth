@@ -757,13 +757,11 @@ const GenerateBooth: React.FC = () => {
                   muted
                   className="video-feed w-[20rem] md:w-[30rem] h-full object-cover rounded-lg"
                   style={{
-                    WebkitFilter: filter, // Ensure compatibility with Safari
+                    WebkitFilter: filter,
                     filter,
                     transform: isMirrored ? "scaleX(-1)" : "none",
                     willChange: "transform, filter",
                     backfaceVisibility: "hidden",
-                    WebkitTransform: isMirrored ? "scaleX(-1)" : "none", // Safari fix
-                    WebkitBackfaceVisibility: "hidden", // Safari fix
                   }}
                 />
 
