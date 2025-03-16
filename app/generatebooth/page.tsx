@@ -269,7 +269,7 @@ const GenerateBooth: React.FC = () => {
             deviceId: { exact: deviceId },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
-            frameRate: { ideal: 60, max: 60 },
+            frameRate: { ideal: 30 },
           },
         };
 
@@ -398,8 +398,6 @@ const GenerateBooth: React.FC = () => {
       canvas.height = videoHeight;
 
       context.save();
-
-      // Ensure filter compatibility with Safari
       context.filter = filter !== "none" ? filter : "none";
 
       if (isMirrored) {
@@ -407,11 +405,10 @@ const GenerateBooth: React.FC = () => {
         context.scale(-1, 1);
       }
 
-      // Use requestAnimationFrame for better rendering on iOS
-      requestAnimationFrame(() => {
-        context.drawImage(video, 0, 0, videoWidth, videoHeight);
-        context.restore();
-      });
+      // Draw the entire video frame without cropping
+      context.drawImage(video, 0, 0, videoWidth, videoHeight);
+
+      context.restore();
 
       return canvas.toDataURL("image/png");
     }
@@ -754,17 +751,14 @@ const GenerateBooth: React.FC = () => {
                   ref={videoRef}
                   playsInline
                   autoPlay
-                  muted
                   className="video-feed w-[20rem] md:w-[30rem] h-full object-cover rounded-lg"
                   style={{
-                    WebkitFilter: filter,
+                    WebkitFilter: filter, 
                     filter,
                     transform: isMirrored ? "scaleX(-1)" : "none",
-                    willChange: "transform, filter",
-                    backfaceVisibility: "hidden",
                   }}
+                  
                 />
-
                 {/* White Flash Overlay */}
                 <div
                   ref={flashRef}
