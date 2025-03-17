@@ -751,14 +751,19 @@ const GenerateBooth: React.FC = () => {
                   ref={videoRef}
                   playsInline
                   autoPlay
+                  muted
                   className="video-feed w-[20rem] md:w-[30rem] h-full object-cover rounded-lg"
                   style={{
                     WebkitFilter: filter, 
                     filter,
                     transform: isMirrored ? "scaleX(-1)" : "none",
+                    willChange: "transform, filter",
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: isMirrored ? "scaleX(-1)" : "none", 
+                    WebkitBackfaceVisibility: "hidden", 
                   }}
-                  
                 />
+
                 {/* White Flash Overlay */}
                 <div
                   ref={flashRef}

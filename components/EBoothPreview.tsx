@@ -20,6 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import Image from "next/image";
 
 type Frame = {
   draw: (
@@ -30,6 +36,143 @@ type Frame = {
     height: number
   ) => void;
 };
+
+type Sticker = {
+  id: string;
+  src: string;
+  x: number | ((totalWidth: number) => number);
+  y: number | ((totalHeight: number) => number);
+  width: number;
+  height: number;
+};
+
+const stickers: Record<string, Sticker[]> = {
+  panda: [
+    {
+      id: "panda",
+      src: "/stickers/panda.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 100,
+      height: 100,
+    },
+  ],
+  "panda-1": [
+    {
+      id: "panda-1",
+      src: "/stickers/panda-1.png",
+      x: (totalWidth: number) => totalWidth - 120,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 100,
+      height: 100,
+    },
+    {
+      id: "panda-2",
+      src: "/stickers/panda.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 100,
+      height: 100,
+    },
+  ],
+  "panda-2": [
+    {
+      id: "panda-2",
+      src: "/stickers/panda-2.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+  ],
+  "panda-3": [
+    {
+      id: "panda-3",
+      src: "/stickers/panda-3.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+  ],
+  cat: [
+    {
+      id: "cat",
+      src: "/stickers/cat.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+    {
+      id: "cat",
+      src: "/stickers/cat.png",
+      x: (totalWidth: number) => totalWidth - 120,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+  ],
+  "cat-1": [
+    {
+      id: "cat-1",
+      src: "/stickers/cat-1.png",
+      x: (totalWidth: number) => totalWidth - 120,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+    {
+      id: "cat-2",
+      src: "/stickers/cat-2.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+  ],
+  corgi: [
+    {
+      id: "corgi",
+      src: "/stickers/corgi.png",
+      x: (totalWidth: number) => totalWidth - 120,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+  ],
+  "corgi-1": [
+    {
+      id: "corgi-1",
+      src: "/stickers/corgi-1.png",
+      x: 20,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+  ],
+  "corgi-2": [
+    {
+      id: "corgi-2",
+      src: "/stickers/corgi-2.png",
+      x: 30,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+  ],
+  "teddy-bear": [
+    {
+      id: "teddy-bear",
+      src: "/stickers/teddy-bear.png",
+      x: 30,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+  ],
+};
+
 const frames: Record<string, Frame> = {
   none: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -491,6 +634,35 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
     return () => clearTimeout(timeout);
   }, [customColor]);
 
+  const drawStickers = (
+    ctx: CanvasRenderingContext2D,
+    totalWidth: number,
+    totalHeight: number,
+    selectedFrame: string
+  ) => {
+    const selectedStickers = stickers[selectedFrame];
+    if (selectedStickers) {
+      selectedStickers.forEach((sticker) => {
+        const img = document.createElement("img");
+        img.src = sticker.src;
+        img.onload = () => {
+          ctx.drawImage(
+            img,
+            typeof sticker.x === "function" ? sticker.x(totalWidth) : sticker.x,
+            typeof sticker.y === "function"
+              ? sticker.y(totalHeight)
+              : sticker.y,
+            sticker.width,
+            sticker.height
+          );
+        };
+        img.onerror = (e: any) => {
+          console.error(`Failed to load sticker ${sticker.src}:`, e);
+        };
+      });
+    }
+  };
+
   const generatePhotoStrip = useCallback(() => {
     const canvas = stripCanvasRef.current;
     if (!canvas) return;
@@ -500,9 +672,9 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
 
     const imgWidth = 400;
     const imgHeight = 300;
-    const borderSize = 40;
+    const borderSize = 20;
     const photoSpacing = 20;
-    const textHeight = 70;
+    const textHeight = 100;
 
     const numShots = capturedImages.length;
     const totalHeight =
@@ -511,19 +683,17 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       borderSize * 2 +
       textHeight;
 
-    // Adjust the total width based on duplication (remove left border for the second strip)
     const totalWidth = isDuplicate
-      ? imgWidth * 2 + borderSize * 3 // Adjusted to keep right border on the second strip only
+      ? imgWidth * 2 + borderSize * 3
       : imgWidth + borderSize * 2;
 
     canvas.width = totalWidth;
     canvas.height = totalHeight;
 
     const drawStrip = (offsetX = 0, removeLeftBorder = false) => {
-      // Adjust left border removal for the second strip
       const adjustedOffsetX = removeLeftBorder ? offsetX - borderSize : offsetX;
 
-      // Draw the background (single or double column)
+      // Draw background
       ctx.fillStyle = stripColor === "film" ? "black" : stripColor;
       ctx.fillRect(
         adjustedOffsetX,
@@ -532,7 +702,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
         canvas.height
       );
 
-      // Draw film holes if "film" is selected
+      // Draw film holes
       if (stripColor === "film") {
         ctx.fillStyle = "#fff";
         const holeWidth = 30;
@@ -566,13 +736,12 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
 
       let imagesLoaded = 0;
       capturedImages.forEach((image, index) => {
-        const img = new Image();
+        const img = document.createElement("img");
         img.src = image;
         img.onload = () => {
           if (!ctx) return;
           const yOffset = borderSize + (imgHeight + photoSpacing) * index;
 
-          // Scale and center the image within the frame
           const imageRatio = img.width / img.height;
           const targetRatio = imgWidth / imgHeight;
 
@@ -602,7 +771,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             imgHeight
           );
 
-          // Draw frame (if selected)
+          // Draw frame if selected
           if (
             frames[selectedFrame] &&
             typeof frames[selectedFrame].draw === "function"
@@ -616,13 +785,35 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             );
           }
 
+          // Draw stickers if selected
+          if (selectedFrame && stickers[selectedFrame]) {
+            drawStickers(ctx, totalWidth, totalHeight, selectedFrame);
+          }
+
           imagesLoaded++;
           if (imagesLoaded === numShots) {
-            const textPositionY =
-              totalHeight - borderSize - (showDate ? 30 : 0);
+            const gap = 10;
+            const centerY = totalHeight - textHeight + 50;
 
-            // Draw date
-            if (showDate) {
+            // Dynamic color adjustment based on luminance
+            ctx.fillStyle = getTextColor(stripColor);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            if (textInput && showDate) {
+              const textPositionY = centerY - fontSize / 2 - gap / 2;
+              const datePositionY = centerY + fontSize / 2 + gap / 2;
+
+              ctx.font = `${isItalic ? "italic" : ""} ${
+                isBold ? "bold" : ""
+              } ${fontSize}px ${selectedFont}, sans-serif`;
+              ctx.fillText(
+                textInput,
+                adjustedOffsetX + imgWidth / 2 + borderSize,
+                textPositionY
+              );
+
+              ctx.font = "20px Arial";
               const now = new Date();
               const timestamp = now.toLocaleDateString("en-US", {
                 month: "2-digit",
@@ -630,40 +821,34 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 year: "numeric",
               });
 
-              ctx.fillStyle =
-                stripColor === "black" || stripColor === "film"
-                  ? "#FFFFFF"
-                  : "#000000";
-              ctx.font = "16px Arial";
-              ctx.textAlign = "center";
               ctx.fillText(
                 timestamp,
                 adjustedOffsetX + imgWidth / 2 + borderSize,
-                totalHeight - borderSize
+                datePositionY
               );
-            }
-
-            // Draw custom text
-            if (textInput) {
-              ctx.fillStyle =
-                stripColor === "black" || stripColor === "film"
-                  ? "#FFFFFF"
-                  : "#000000";
-
-              // Set font once to avoid per-character font setting issues
+            } else if (textInput) {
               ctx.font = `${isItalic ? "italic" : ""} ${
                 isBold ? "bold" : ""
               } ${fontSize}px ${selectedFont}, sans-serif`;
+              ctx.fillText(
+                textInput,
+                adjustedOffsetX + imgWidth / 2 + borderSize,
+                centerY
+              );
+            } else if (showDate) {
+              ctx.font = "20px Arial";
+              const now = new Date();
+              const timestamp = now.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              });
 
-              ctx.textAlign = "center"; // Center alignment
-              ctx.textBaseline = "middle"; // Vertically align to middle (optional)
-
-              // Center text horizontally and vertically
-              const x = adjustedOffsetX + imgWidth / 2 + borderSize;
-              const y = textPositionY;
-
-              // Draw the whole text string at once to avoid spacing issues
-              ctx.fillText(textInput, x, y);
+              ctx.fillText(
+                timestamp,
+                adjustedOffsetX + imgWidth / 2 + borderSize,
+                centerY
+              );
             }
           }
         };
@@ -672,7 +857,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
 
     // Draw single or double strip without a gap
     drawStrip(0);
-    if (isDuplicate) drawStrip(imgWidth + borderSize * 2, true); // Removed left border for the second strip
+    if (isDuplicate) drawStrip(imgWidth + borderSize * 2, true);
   }, [
     capturedImages,
     stripColor,
@@ -709,6 +894,28 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleColorChange = (e: { target: { value: any; }; }) => {
+    const color = e.target.value;
+    setCustomColor(color);
+  };
+
+  const getTextColor = (bgColor: string) => {
+    if (bgColor.startsWith("#")) {
+      const r = parseInt(bgColor.slice(1, 3), 16);
+      const g = parseInt(bgColor.slice(3, 5), 16);
+      const b = parseInt(bgColor.slice(5, 7), 16);
+
+      // Luminance formula
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      return luminance < 128 ? "#FFFFFF" : "#000000";
+    }
+
+    // Default for predefined colors
+    if (bgColor === "black" || bgColor === "film") return "#FFFFFF";
+    return "#000000";
+  };
 
   const downloadPhotoStrip = () => {
     if (!stripCanvasRef.current) {
@@ -759,22 +966,23 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
     const validateEmail = (email: string) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) return false;
-  
-      if (email.includes("..") || email.endsWith(".") || email.startsWith(".")) return false;
+
+      if (email.includes("..") || email.endsWith(".") || email.startsWith("."))
+        return false;
       if (email.includes("@@") || email.startsWith("@")) return false;
-  
+
       if (email.length < 5 || email.length > 254) return false;
-  
+
       const [localPart, domain] = email.split("@");
       if (!domain || domain.length < 3 || !domain.includes(".")) return false;
       if (localPart.length > 64) return false;
-  
+
       const tld = domain.split(".").pop();
       if (!tld || tld.length < 2) return false;
-  
+
       return true;
     };
-  
+
     const commonMisspellings: Record<string, string> = {
       "gmail.co": "gmail.com",
       "gmail.cm": "gmail.com",
@@ -788,7 +996,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       "outloo.com": "outlook.com",
       "outlok.com": "outlook.com",
     };
-  
+
     const checkForTypos = (
       email: string
     ): { hasTypo: boolean; suggestion: string } => {
@@ -801,30 +1009,36 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       }
       return { hasTypo: false, suggestion: email };
     };
-  
+
     if (!email) {
-      toast.error("Please enter an email address.", { position: "bottom-right", duration: 3000 });
+      toast.error("Please enter an email address.", {
+        position: "bottom-right",
+        duration: 3000,
+      });
       return;
     }
-  
+
     setSending(true);
-  
+
     const typoCheck = checkForTypos(email);
     if (typoCheck.hasTypo) {
       if (confirm(`Did you mean ${typoCheck.suggestion}?`)) {
         setEmail(typoCheck.suggestion);
       }
     }
-  
+
     if (!validateEmail(email)) {
-      toast.error("Please enter a valid email address. Example: name@example.com", {
-        position: "bottom-right",
-        duration: 3000,
-      });
+      toast.error(
+        "Please enter a valid email address. Example: name@example.com",
+        {
+          position: "bottom-right",
+          duration: 3000,
+        }
+      );
       setSending(false);
       return;
     }
-  
+
     const blockedDomains = [
       "mymail.lausd.net",
       "lausd.net",
@@ -832,31 +1046,36 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       "undefined",
       "@undefined",
     ];
-  
+
     const domain = email.split("@")[1];
     if (blockedDomains.includes(domain) || domain.includes("undefined")) {
-      toast.error("This email domain is not supported. Please use a different email address.", {
-        position: "bottom-right",
-        duration: 3000,
-      });
+      toast.error(
+        "This email domain is not supported. Please use a different email address.",
+        {
+          position: "bottom-right",
+          duration: 3000,
+        }
+      );
       setSending(false);
       return;
     }
-  
+
     let loadingToastId: string | number | null = null;
-  
+
     try {
-      loadingToastId = toast.loading("Sending email...", { position: "bottom-right" });
-  
+      loadingToastId = toast.loading("Sending email...", {
+        position: "bottom-right",
+      });
+
       await new Promise((resolve) => setTimeout(resolve, 500));
-  
+
       if (!stripCanvasRef.current) {
         console.error("Canvas reference is null");
         if (loadingToastId) toast.dismiss(loadingToastId);
         setSending(false);
         return;
       }
-  
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/send-photo-strip`,
         {
@@ -864,25 +1083,31 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
           imageData: stripCanvasRef.current.toDataURL("image/jpeg", 0.7),
         }
       );
-  
+
       if (loadingToastId) toast.dismiss(loadingToastId);
-  
+
       // Add a small delay to let the state update before showing the toast
       setTimeout(() => {
         if (response.data.success) {
-          toast.success("Your E-Booth photo strip is sent! Check your inbox or spam.", {
-            position: "bottom-right",
-            duration: 3000,
-          });
+          toast.success(
+            "Your E-Booth photo strip is sent! Check your inbox or spam.",
+            {
+              position: "bottom-right",
+              duration: 3000,
+            }
+          );
           setEmail("");
         } else {
-          toast.error(`Failed to send: ${response.data.message || "Unknown error"}`, {
-            position: "bottom-right",
-            duration: 3000,
-          });
+          toast.error(
+            `Failed to send: ${response.data.message || "Unknown error"}`,
+            {
+              position: "bottom-right",
+              duration: 3000,
+            }
+          );
         }
       }, 100);
-  
+
       setSending(false);
     } catch (error: any) {
       console.error("Network Error Details:", {
@@ -890,9 +1115,9 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
         response: error.response?.data,
         status: error.response?.status,
       });
-  
+
       if (loadingToastId) toast.dismiss(loadingToastId);
-  
+
       setTimeout(() => {
         if (error.response?.status === 400) {
           toast.error(
@@ -900,24 +1125,27 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             { position: "bottom-right", duration: 3000 }
           );
         } else if (error.message.includes("Network Error")) {
-          toast.error("Network connection error. Please check your internet and try again.", {
-            position: "bottom-right",
-            duration: 3000,
-          });
+          toast.error(
+            "Network connection error. Please check your internet and try again.",
+            {
+              position: "bottom-right",
+              duration: 3000,
+            }
+          );
         } else {
           toast.error(
             `Error: ${
-              error.response?.data?.message || "Failed to send. Please try again later."
+              error.response?.data?.message ||
+              "Failed to send. Please try again later."
             }`,
             { position: "bottom-right", duration: 3000 }
           );
         }
       }, 100);
-  
+
       setSending(false);
     }
   };
-  
 
   return (
     <div
@@ -1008,7 +1236,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 <input
                   type="color"
                   value={customColor}
-                  onChange={(e) => setCustomColor(e.target.value)}
+                  onChange={handleColorChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
               </label>
@@ -1077,6 +1305,30 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             >
               ✨
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none">
+                  🐼
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-40 grid grid-cols-2 gap-2 p-2">
+                {Object.keys(stickers).map((frame) => (
+                  <Button
+                    key={frame}
+                    onClick={() => setSelectedFrame(frame)}
+                    className="p-2 bg-white hover:bg-primary rounded-md border border-gray-300 dark:border-none"
+                  >
+                    <Image
+                      src={stickers[frame][0].src}
+                      alt={frame}
+                      width={40}
+                      height={40}
+                      className="object-contain"
+                    />
+                  </Button>
+                ))}
+              </PopoverContent>
+            </Popover>
           </div>
           {/* {customize text} */}
           <p className="text-xs tracking-wider leading-3 text-black-100 dark:text-primary-foreground  mt-4">
