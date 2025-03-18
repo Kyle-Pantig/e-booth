@@ -26,6 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Image from "next/image";
+import { Badge } from "./ui/badge";
 
 type Frame = {
   draw: (
@@ -895,7 +896,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
     };
   }, []);
 
-  const handleColorChange = (e: { target: { value: any; }; }) => {
+  const handleColorChange = (e: { target: { value: any } }) => {
     const color = e.target.value;
     setCustomColor(color);
   };
@@ -1307,9 +1308,14 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none">
-                  🐼
-                </Button>
+                <div className="relative">
+                  <Button className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none">
+                    🐼
+                  </Button>
+                  <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] px-1 py-0.3 rounded-full">
+                    New
+                  </Badge>
+                </div>
               </PopoverTrigger>
               <PopoverContent className="w-40 grid grid-cols-2 gap-2 p-2">
                 {Object.keys(stickers).map((frame) => (

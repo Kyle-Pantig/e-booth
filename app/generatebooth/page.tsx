@@ -298,8 +298,6 @@ const GenerateBooth: React.FC = () => {
       stopCamera();
     }
   }, [cameraOn, selectedDeviceId, startCamera]);
-
-  // Function to trigger the flash effect
   const triggerFlash = () => {
     if (flashRef.current) {
       flashRef.current.style.opacity = "1";
@@ -752,15 +750,15 @@ const GenerateBooth: React.FC = () => {
                   playsInline
                   autoPlay
                   muted
-                  className="video-feed w-[20rem] md:w-[30rem] h-full object-cover rounded-lg"
+                  className="video-feed w-full h-full max-w-[20.5rem] sm:max-w-[26rem] md:max-w-[30rem]  object-cover rounded-lg"
                   style={{
-                    WebkitFilter: filter, 
+                    WebkitFilter: filter,
                     filter,
                     transform: isMirrored ? "scaleX(-1)" : "none",
                     willChange: "transform, filter",
                     backfaceVisibility: "hidden",
-                    WebkitTransform: isMirrored ? "scaleX(-1)" : "none", 
-                    WebkitBackfaceVisibility: "hidden", 
+                    WebkitTransform: isMirrored ? "scaleX(-1)" : "none",
+                    WebkitBackfaceVisibility: "hidden",
                   }}
                 />
 
@@ -851,16 +849,16 @@ const GenerateBooth: React.FC = () => {
             </Button>
           </div>
 
-          <div className="flex justify-center items-center mx-auto gap-2">
+          <div className="flex justify-center items-center mx-auto gap-4 w-full">
             {[1, 2, 3, 4].map((shot) => (
               <Button
                 key={shot}
                 onClick={() => setNumShots(shot)}
-                className={
+                className={`rounded-full ${
                   numShots === shot
-                    ? "bg-primary text-white text-xs"
-                    : "bg-gray-300 text-black-100 text-xs"
-                }
+                    ? "bg-primary dark:text-white text-xs"
+                    : "bg-accent dark:text-white text-black-100 text-xs"
+                }`}
                 disabled={capturing}
               >
                 {shot} Shot{shot > 1 ? "s" : ""}

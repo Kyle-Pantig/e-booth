@@ -77,7 +77,7 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[300px] justify-between bg-gray-300 dark:text-black-100 dark:hover:text-white"
+          className="w-full md:w-[300px] justify-between bg-accent  dark:text-white dark:hover:text-white"
         >
           {selectedDeviceId
             ? devices.find((device) => device.deviceId === selectedDeviceId)
@@ -86,7 +86,7 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
+      <PopoverContent className="w-[328px] sm:w-[416px] md:w-[300px] p-0">
         <Command>
           <CommandList>
             <CommandEmpty>No cameras found.</CommandEmpty>
