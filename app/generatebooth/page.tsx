@@ -388,7 +388,7 @@ const GenerateBooth: React.FC = () => {
         return null;
       }
 
-      // Match canvas size with the video stream's resolution
+      // Match canvas size with video stream's resolution
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
 
@@ -396,18 +396,22 @@ const GenerateBooth: React.FC = () => {
       canvas.height = videoHeight;
 
       context.save();
-      context.filter = filter !== "none" ? filter : "none";
+
+      // Apply the same filters used on video directly to canvas context
+      const computedFilter = getComputedStyle(video).getPropertyValue("filter");
+      context.filter = computedFilter !== "none" ? computedFilter : "";
 
       if (isMirrored) {
         context.translate(canvas.width, 0);
         context.scale(-1, 1);
       }
 
-      // Draw the entire video frame without cropping
+      // Draw the video frame to canvas
       context.drawImage(video, 0, 0, videoWidth, videoHeight);
 
       context.restore();
 
+      // Return captured image as base64
       return canvas.toDataURL("image/png");
     }
     return null;

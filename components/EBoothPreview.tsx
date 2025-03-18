@@ -673,7 +673,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
 
     const imgWidth = 400;
     const imgHeight = 300;
-    const borderSize = 20;
+    const borderSize = 30;
     const photoSpacing = 20;
     const textHeight = 100;
 
@@ -706,15 +706,15 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
       // Draw film holes
       if (stripColor === "film") {
         ctx.fillStyle = "#fff";
-        const holeWidth = 30;
+        const holeWidth = 20;
         const holeHeight = 25;
-        const borderRadius = 5;
+        const borderRadius = 2;
 
         for (let i = 40; i < canvas.height - 40; i += 80) {
           // Left side
           ctx.beginPath();
           ctx.roundRect(
-            adjustedOffsetX + 10,
+            adjustedOffsetX + 5,
             i,
             holeWidth,
             holeHeight,
@@ -725,7 +725,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
           // Right side
           ctx.beginPath();
           ctx.roundRect(
-            adjustedOffsetX + imgWidth + borderSize * 2 - 40,
+            adjustedOffsetX + imgWidth + borderSize * 2 - 26,
             i,
             holeWidth,
             holeHeight,
