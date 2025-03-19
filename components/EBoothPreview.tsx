@@ -27,581 +27,27 @@ import {
 } from "@/components/ui/popover";
 import Image from "next/image";
 import { Badge } from "./ui/badge";
-
-type Frame = {
-  draw: (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-  ) => void;
-};
-
-type Sticker = {
-  id: string;
-  src: string;
-  x: number | ((totalWidth: number) => number);
-  y: number | ((totalHeight: number) => number);
-  width: number;
-  height: number;
-};
-
-const stickers: Record<string, Sticker[]> = {
-  panda: [
-    {
-      id: "panda",
-      src: "/stickers/panda.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 100,
-      height: 100,
-    },
-  ],
-  "panda-1": [
-    {
-      id: "panda-1",
-      src: "/stickers/panda-1.png",
-      x: (totalWidth: number) => totalWidth - 120,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 100,
-      height: 100,
-    },
-    {
-      id: "panda-2",
-      src: "/stickers/panda.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 100,
-      height: 100,
-    },
-  ],
-  "panda-2": [
-    {
-      id: "panda-2",
-      src: "/stickers/panda-2.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 120,
-      height: 120,
-    },
-  ],
-  "panda-3": [
-    {
-      id: "panda-3",
-      src: "/stickers/panda-3.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-  ],
-  cat: [
-    {
-      id: "cat",
-      src: "/stickers/cat.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-    {
-      id: "cat",
-      src: "/stickers/cat.png",
-      x: (totalWidth: number) => totalWidth - 120,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-  ],
-  "cat-1": [
-    {
-      id: "cat-1",
-      src: "/stickers/cat-1.png",
-      x: (totalWidth: number) => totalWidth - 120,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-    {
-      id: "cat-2",
-      src: "/stickers/cat-2.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-  ],
-  corgi: [
-    {
-      id: "corgi",
-      src: "/stickers/corgi.png",
-      x: (totalWidth: number) => totalWidth - 120,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-  ],
-  "corgi-1": [
-    {
-      id: "corgi-1",
-      src: "/stickers/corgi-1.png",
-      x: 20,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 110,
-      height: 110,
-    },
-  ],
-  "corgi-2": [
-    {
-      id: "corgi-2",
-      src: "/stickers/corgi-2.png",
-      x: 30,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 120,
-      height: 120,
-    },
-  ],
-  "teddy-bear": [
-    {
-      id: "teddy-bear",
-      src: "/stickers/teddy-bear.png",
-      x: 30,
-      y: (totalHeight: number) => totalHeight - 120,
-      width: 120,
-      height: 120,
-    },
-  ],
-};
-
-const frames: Record<string, Frame> = {
-  none: {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    draw: (ctx, x, y, width, height) => {
-      // Default frame logic (empty frame)
-    },
-  },
-  glowingStar: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawGlowingStar = (
-        centerX: number,
-        centerY: number,
-        size: number,
-        color = "#FFFACD"
-      ) => {
-        // Outer Glow Effect
-        const gradient = ctx.createRadialGradient(
-          centerX,
-          centerY,
-          size * 0.1,
-          centerX,
-          centerY,
-          size
-        );
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(0.5, "rgba(255, 215, 0, 0.8)");
-        gradient.addColorStop(1, "rgba(255, 215, 0, 0)");
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, size * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Main Star Shape
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-          const point = i === 0 ? "moveTo" : "lineTo";
-          (ctx as any)[point](
-            centerX + size * Math.cos(angle),
-            centerY + size * Math.sin(angle)
-          );
-        }
-        ctx.closePath();
-        ctx.fill();
-      };
-
-      // Draw glowing stars around the frame
-      drawGlowingStar(x + 120, y + 1, 15);
-      drawGlowingStar(x + 1, y + 70, 12);
-      drawGlowingStar(x + width - 50, y + 80, 15);
-      drawGlowingStar(x + width - 10, y + 250, 14);
-      drawGlowingStar(x + 20, y + height - 55, 10);
-      drawGlowingStar(x + width - 100, y + height - 20, 12);
-    },
-  },
-
-  leaf: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawLeaf = (
-        centerX: number,
-        centerY: number,
-        size: number,
-        color = "#3CB371"
-      ) => {
-        ctx.fillStyle = color;
-
-        // Leaf Shape
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.quadraticCurveTo(
-          centerX - size * 0.5,
-          centerY - size,
-          centerX,
-          centerY - size * 1.5
-        );
-        ctx.quadraticCurveTo(
-          centerX + size * 0.5,
-          centerY - size,
-          centerX,
-          centerY
-        );
-        ctx.fill();
-
-        // Leaf Vein (Middle)
-        ctx.strokeStyle = "#2E8B57";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(centerX, centerY - size * 1.5);
-        ctx.stroke();
-
-        // Side Veins
-        for (let i = 1; i < 3; i++) {
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY - (size * i) / 3);
-          ctx.lineTo(centerX - size * 0.3, centerY - (size * i) / 2);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY - (size * i) / 3);
-          ctx.lineTo(centerX + size * 0.3, centerY - (size * i) / 2);
-          ctx.stroke();
-        }
-      };
-
-      // Draw leaves around the frame
-      drawLeaf(x + 100, y + 20, 35, "#3CB371");
-      drawLeaf(x + width - 1, y + 80, 28, "#3CB371");
-      drawLeaf(x + width - 50, y + 250, 30, "#3CB371");
-      drawLeaf(x + 10, y + height - 55, 35, "#3CB371");
-    },
-  },
-  butterfly: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawButterfly = (
-        centerX: number,
-        centerY: number,
-        size: number,
-        color = "#7B68EE"
-      ) => {
-        ctx.fillStyle = color;
-
-        // Left Wing (Upper)
-        ctx.beginPath();
-        ctx.ellipse(
-          centerX - size * 0.4,
-          centerY - size * 0.3,
-          size * 0.5,
-          size * 0.8,
-          Math.PI / 4,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-
-        // Left Wing (Lower)
-        ctx.beginPath();
-        ctx.ellipse(
-          centerX - size * 0.45,
-          centerY + size * 0.3,
-          size * 0.4,
-          size * 0.6,
-          Math.PI / 4,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-
-        // Right Wing (Upper)
-        ctx.beginPath();
-        ctx.ellipse(
-          centerX + size * 0.4,
-          centerY - size * 0.3,
-          size * 0.5,
-          size * 0.8,
-          -Math.PI / 4,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-
-        // Right Wing (Lower)
-        ctx.beginPath();
-        ctx.ellipse(
-          centerX + size * 0.45,
-          centerY + size * 0.3,
-          size * 0.4,
-          size * 0.6,
-          -Math.PI / 4,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-
-        // Body
-        ctx.fillStyle = "#4B0082"; // Dark purple for contrast
-        ctx.beginPath();
-        ctx.ellipse(
-          centerX,
-          centerY,
-          size * 0.15,
-          size * 0.7,
-          0,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-
-        // Antennae
-        ctx.strokeStyle = "#4B0082";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(centerX - size * 0.1, centerY - size * 0.6);
-        ctx.quadraticCurveTo(
-          centerX - size * 0.2,
-          centerY - size,
-          centerX - size * 0.05,
-          centerY - size * 1.1
-        );
-        ctx.moveTo(centerX + size * 0.1, centerY - size * 0.6);
-        ctx.quadraticCurveTo(
-          centerX + size * 0.2,
-          centerY - size,
-          centerX + size * 0.05,
-          centerY - size * 1.1
-        );
-        ctx.stroke();
-      };
-
-      // Draw butterflies around the frame
-      drawButterfly(x + 150, y + 18, 12, "#7B68EE");
-      drawButterfly(x + width - 1, y + 45, 18, "#7B68EE");
-      drawButterfly(x + 0, y + height - 65, 15, "#7B68EE");
-      drawButterfly(x + width - 120, y + height - 5, 18, "#7B68EE");
-    },
-  },
-  flowers: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawFlowers = (x: number, y: number) => {
-        ctx.fillStyle = "#FF9BE4";
-        for (let i = 0; i < 5; i++) {
-          ctx.beginPath();
-          const angle = (i * 2 * Math.PI) / 5;
-          ctx.ellipse(
-            x + Math.cos(angle) * 10,
-            y + Math.sin(angle) * 10,
-            8,
-            8,
-            0,
-            0,
-            2 * Math.PI
-          );
-          ctx.fill();
-        }
-        ctx.fillStyle = "#FFE4E1";
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, 2 * Math.PI);
-        ctx.fill();
-      };
-
-      // Draw decorations around the frame
-      drawFlowers(x + 70, y + 40);
-      drawFlowers(x + width - 1, y + 45);
-      drawFlowers(x + width - 1, y + 300);
-      drawFlowers(x + 0, y + height - 65);
-      drawFlowers(x + 130, y + height + 10);
-    },
-  },
-  bow: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawBow = (x: number, y: number) => {
-        ctx.fillStyle = "#f9cee7";
-        ctx.beginPath();
-        ctx.ellipse(x - 10, y, 10, 6, Math.PI / 4, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(x + 10, y, 10, 6, -Math.PI / 4, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = "#e68bbe";
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-      };
-
-      // Draw decorations around the frame
-      drawBow(x + 70, y + 40);
-      drawBow(x + width - 1, y + 45);
-      drawBow(x + width - 1, y + 300);
-      drawBow(x + 0, y + height - 65);
-      drawBow(x + 130, y + height + 10);
-    },
-  },
-  stars: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawStar = (
-        centerX: number,
-        centerY: number,
-        size: number,
-        color = "#9370DB"
-      ) => {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-          const point = i === 0 ? "moveTo" : "lineTo";
-          (ctx as any)[point](
-            centerX + size * Math.cos(angle),
-            centerY + size * Math.sin(angle)
-          );
-        }
-        ctx.closePath();
-        ctx.fill();
-      };
-
-      // Draw decorations around the frame
-      drawStar(x + 150, y + 18, 25, "#9370DB");
-      drawStar(x + 20, y + 100, 10, "#9370DB");
-      drawStar(x + width - 1, y + 45, 12, "#9370DB");
-      drawStar(x + width - 1, y + 300, 12, "#9370DB");
-      drawStar(x + 0, y + height - 65, 15, "#9370DB");
-      drawStar(x + width - 120, y + height - 5, 12, "#9370DB");
-    },
-  },
-  clouds: {
-    draw: (
-      ctx: CanvasRenderingContext2D, // ✅ Correct type
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawCloud = (centerX: number, centerY: number) => {
-        ctx.fillStyle = "#87CEEB";
-        const cloudParts = [
-          { x: 0, y: 0, r: 14 },
-          { x: -6, y: 2, r: 10 },
-          { x: 6, y: 2, r: 10 },
-        ];
-        cloudParts.forEach((part) => {
-          ctx.beginPath();
-          ctx.arc(centerX + part.x, centerY + part.y, part.r, 0, Math.PI * 2);
-          ctx.fill();
-        });
-      };
-
-      // Draw decorations around the frame
-      drawCloud(x + 150, y + 18);
-      drawCloud(x + width - 1, y + 45);
-      drawCloud(x + width - 1, y + 300);
-      drawCloud(x + 0, y + height - 65);
-    },
-  },
-  hearts: {
-    draw: (
-      ctx: CanvasRenderingContext2D,
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ) => {
-      const drawHeart = (x: number, y: number) => {
-        ctx.fillStyle = "#cc8084";
-        ctx.beginPath();
-        const heartSize = 22;
-        ctx.moveTo(x, y + heartSize / 4);
-        ctx.bezierCurveTo(
-          x,
-          y,
-          x - heartSize / 2,
-          y,
-          x - heartSize / 2,
-          y + heartSize / 4
-        );
-        ctx.bezierCurveTo(
-          x - heartSize / 2,
-          y + heartSize / 2,
-          x,
-          y + heartSize * 0.75,
-          x,
-          y + heartSize
-        );
-        ctx.bezierCurveTo(
-          x,
-          y + heartSize * 0.75,
-          x + heartSize / 2,
-          y + heartSize / 2,
-          x + heartSize / 2,
-          y + heartSize / 4
-        );
-        ctx.bezierCurveTo(x + heartSize / 2, y, x, y, x, y + heartSize / 4);
-        ctx.fill();
-      };
-
-      // Hearts positioned to match the "cute" frame
-      drawHeart(x + 150, y + 18); // Top middle
-      drawHeart(x + 20, y + 5); // Top left
-      drawHeart(x + width - 1, y + 45); // Top right
-      drawHeart(x + width - 80, y + 5); // Near top-right
-
-      drawHeart(x + 150, y + height - 5); // Bottom middle
-      drawHeart(x + 0, y + height - 65); // Bottom left
-      drawHeart(x + width - 5, y + height - 85); // Bottom right
-      drawHeart(x + width - 120, y + height - 5); // Near bottom-right
-    },
-  },
-};
+import { fontOptions, fontSizeOptions, frames, stickers } from "@/data";
+import { Slider } from "./ui/slider";
 
 interface PhotoPreviewProps {
   capturedImages: string[];
 }
+
+const buttonFrames = [
+  {
+    id: "none",
+    icon: <MdBlock size={24} className="text-black group-hover:text-white" />,
+  },
+  { id: "flowers", icon: "🌸" },
+  { id: "stars", icon: "⭐" },
+  { id: "hearts", icon: "❤️" },
+  { id: "clouds", icon: "☁️" },
+  { id: "bow", icon: "🎀" },
+  { id: "butterfly", icon: "🦋" },
+  { id: "leaf", icon: "🍃" },
+  { id: "glowingStar", icon: "✨" },
+];
 
 const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const { numShots } = useCapturedImages();
@@ -621,6 +67,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const [isDuplicate, setIsDuplicate] = useState<boolean>(false);
   const [selectedFont, setSelectedFont] = useState<string>("Arial");
   const [fontSize, setFontSize] = useState<number>(20);
+  const [radius, setRadius] = useState<number>(10);
 
   const toggleBold = () => setIsBold((prev) => !prev);
   const toggleItalic = () => setIsItalic((prev) => !prev);
@@ -759,6 +206,18 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             sourceY = (img.height - sourceHeight) / 2;
           }
 
+          // ✅ Apply rounded corners using roundRect + clip
+          ctx.save(); // Save the current context state
+          ctx.beginPath();
+          ctx.roundRect(
+            adjustedOffsetX + borderSize,
+            yOffset,
+            imgWidth,
+            imgHeight,
+            radius // ✅ Use the adjustable `radius`
+          );
+          ctx.clip(); // Clip the canvas to the rounded rectangle
+
           // Draw the image
           ctx.drawImage(
             img,
@@ -771,6 +230,8 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             imgWidth,
             imgHeight
           );
+
+          ctx.restore(); // Restore the previous context state
 
           // Draw frame if selected
           if (
@@ -814,12 +275,12 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 textPositionY
               );
 
-              ctx.font = "20px Arial";
+              ctx.font = "20px Courier New";
               const now = new Date();
               const timestamp = now.toLocaleDateString("en-US", {
                 month: "2-digit",
                 day: "2-digit",
-                year: "numeric",
+                year: "2-digit",
               });
 
               ctx.fillText(
@@ -837,12 +298,12 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 centerY
               );
             } else if (showDate) {
-              ctx.font = "20px Arial";
+              ctx.font = "20px Courier New";
               const now = new Date();
               const timestamp = now.toLocaleDateString("en-US", {
                 month: "2-digit",
                 day: "2-digit",
-                year: "numeric",
+                year: "2-digit",
               });
 
               ctx.fillText(
@@ -861,15 +322,16 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
     if (isDuplicate) drawStrip(imgWidth + borderSize * 2, true);
   }, [
     capturedImages,
+    isDuplicate,
     stripColor,
+    radius,
     selectedFrame,
     textInput,
     showDate,
-    isBold,
-    isItalic,
-    isDuplicate,
-    selectedFont,
     fontSize,
+    isItalic,
+    isBold,
+    selectedFont,
   ]);
 
   useEffect(() => {
@@ -1248,64 +710,17 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             Stickers
           </p>
           <div className="flex flex-wrap gap-3 my-6">
-            <Button
-              onClick={() => setSelectedFrame("none")}
-              className="p-2 bg-white hover:bg-primary group w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              <MdBlock
-                size={24}
-                className="text-black group-hover:text-white"
-              />
-            </Button>
+            {buttonFrames.map((frame) => (
+              <Button
+                key={frame.id}
+                onClick={() => setSelectedFrame(frame.id)}
+                className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
+              >
+                {frame.icon}
+              </Button>
+            ))}
 
-            <Button
-              onClick={() => setSelectedFrame("flowers")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              🌸
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("stars")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              ⭐
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("hearts")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              ❤️
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("clouds")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              ☁️
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("bow")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              🎀
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("butterfly")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              🦋
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("leaf")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              🍃
-            </Button>
-            <Button
-              onClick={() => setSelectedFrame("glowingStar")}
-              className="p-2 bg-white hover:bg-primary w-10 h-10 rounded-full border border-gray-300 dark:border-none"
-            >
-              ✨
-            </Button>
+            {/* Popover for extra stickers */}
             <Popover>
               <PopoverTrigger asChild>
                 <div className="relative">
@@ -1405,79 +820,15 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 <SelectValue placeholder="Select Font" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-accent border border-gray-300 dark:border-gray-700">
-                {/* Standard Fonts */}
-                <SelectItem
-                  value="Arial"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-arial"
-                >
-                  Arial
-                </SelectItem>
-                <SelectItem
-                  value="Courier New"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-courier"
-                >
-                  Courier New
-                </SelectItem>
-                <SelectItem
-                  value="Verdana"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-verdana"
-                >
-                  Verdana
-                </SelectItem>
-                <SelectItem
-                  value="Times New Roman"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-times"
-                >
-                  Times New Roman
-                </SelectItem>
-
-                {/* Calligraphy and Handwriting Fonts */}
-                <SelectItem
-                  value="Brush Script MT"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-brush"
-                >
-                  Brush Script MT (Calligraphy)
-                </SelectItem>
-                <SelectItem
-                  value="Pacifico"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-pacifico"
-                >
-                  Pacifico (Handwriting)
-                </SelectItem>
-
-                {/* Decorative and Cursive Fonts */}
-                <SelectItem
-                  value="Lobster"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-lobster"
-                >
-                  Lobster (Decorative)
-                </SelectItem>
-                <SelectItem
-                  value="Dancing Script"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-dancing"
-                >
-                  Dancing Script (Cursive)
-                </SelectItem>
-
-                {/* Classic Fonts */}
-                <SelectItem
-                  value="Georgia"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-georgia"
-                >
-                  Georgia (Serif)
-                </SelectItem>
-                <SelectItem
-                  value="Comic Sans MS"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-comic"
-                >
-                  Comic Sans MS (Casual)
-                </SelectItem>
-                <SelectItem
-                  value="Impact"
-                  className="hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white font-impact"
-                >
-                  Impact (Bold)
-                </SelectItem>
+                {fontOptions.map((font) => (
+                  <SelectItem
+                    key={font.value}
+                    value={font.value}
+                    className={`hover:bg-gray-100 dark:hover:bg-accent text-black dark:text-white ${font.className}`}
+                  >
+                    {font.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -1489,16 +840,30 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 <SelectValue placeholder="Font Size" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-accent border border-gray-300 dark:border-gray-700">
-                <SelectItem value="12">12px</SelectItem>
-                <SelectItem value="14">14px</SelectItem>
-                <SelectItem value="16">16px</SelectItem>
-                <SelectItem value="18">18px</SelectItem>
-                <SelectItem value="20">20px</SelectItem>
-                <SelectItem value="24">24px</SelectItem>
-                <SelectItem value="28">28px</SelectItem>
-                <SelectItem value="32">32px</SelectItem>
+                {fontSizeOptions.map((size) => (
+                  <SelectItem key={size.value} value={size.value}>
+                    {size.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="w-64 my-6 relative">
+            <div className="flex items-center mb-4">
+              <p className="text-xs tracking-wider leading-3 text-black-100 dark:text-primary-foreground">
+                Corner Radius: {radius}
+              </p>
+              <Badge className="ml-2 bg-red-500 text-white text-[8px] px-1 py-0.3 rounded-full">
+                New
+              </Badge>
+            </div>
+            <Slider
+              value={[radius]}
+              onValueChange={(val) => setRadius(val[0])}
+              min={0}
+              max={50}
+              step={1}
+            />
           </div>
 
           <div className="flex items-center space-x-2 mb-6">
@@ -1530,29 +895,15 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             <Button onClick={downloadPhotoStrip}>
               Download <FaArrowDown />
             </Button>
+
+            {/* //update v1.2.1 */}
             <Button
               onClick={async () => {
                 try {
-                  await new Promise((resolve) => setTimeout(resolve, 100));
-
-                  // Stop existing stream properly
-                  const existingStream =
-                    await navigator.mediaDevices.getUserMedia({ video: true });
-                  existingStream.getTracks().forEach((track) => {
-                    track.stop();
-                    track.enabled = false;
+                  const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
                   });
-
-                  const permissionStatus = await navigator.permissions.query({
-                    name: "camera" as PermissionName,
-                  });
-
-                  if (permissionStatus.state === "denied") {
-                    alert(
-                      "Camera access is denied. Please enable it in your browser settings."
-                    );
-                    return;
-                  }
+                  stream.getTracks().forEach((track) => track.stop());
 
                   router.push("/generatebooth");
                 } catch (error) {

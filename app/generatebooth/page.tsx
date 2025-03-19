@@ -42,103 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const filters = [
-  { name: "No Filter", value: "none" },
-  {
-    name: "Fresh",
-    value: "brightness(110%) saturate(115%) contrast(105%)",
-    slider: "fresh",
-  },
-  {
-    name: "Clear",
-    value: "contrast(125%) brightness(108%) saturate(105%)",
-    slider: "clear",
-  },
-  {
-    name: "Warm",
-    value: "sepia(20%) brightness(108%) contrast(110%)",
-    slider: "warm",
-  },
-  {
-    name: "Film",
-    value: "contrast(105%) brightness(98%) saturate(92%)",
-    slider: "film",
-  },
-  {
-    name: "Modern Gold",
-    value: "sepia(42%) brightness(108%) contrast(115%) hue-rotate(25deg)",
-    slider: "modernGold",
-  },
-  { name: "B&W", value: "grayscale(100%) contrast(125%)", slider: "bw" },
-  { name: "Contrast", value: "contrast(155%)", slider: "contrast" },
-  { name: "Gray", value: "grayscale(100%)", slider: "gray" },
-  {
-    name: "Cool",
-    value: "hue-rotate(220deg) brightness(98%) contrast(108%)",
-    slider: "cool",
-  },
-  {
-    name: "Vintage",
-    value: "sepia(40%) contrast(115%) brightness(102%) saturate(88%)",
-    slider: "vintage",
-  },
-  {
-    name: "Fade",
-    value: "grayscale(30%) brightness(105%) contrast(92%)",
-    slider: "fade",
-  },
-  {
-    name: "Mist",
-    value: "brightness(103%) contrast(97%) blur(0.5px)",
-    slider: "mist",
-  },
-  {
-    name: "Food",
-    value: "saturate(135%) contrast(112%) brightness(105%)",
-    slider: "food",
-  },
-  {
-    name: "Autumn",
-    value: "sepia(35%) hue-rotate(25deg) brightness(108%) contrast(112%)",
-    slider: "autumn",
-  },
-  {
-    name: "City",
-    value: "contrast(120%) brightness(98%) saturate(108%)",
-    slider: "city",
-  },
-  {
-    name: "Country",
-    value: "sepia(25%) brightness(106%) contrast(110%)",
-    slider: "country",
-  },
-  {
-    name: "Sunset",
-    value: "hue-rotate(20deg) brightness(108%) contrast(115%)",
-    slider: "sunset",
-  },
-  {
-    name: "Voyage",
-    value: "hue-rotate(215deg) brightness(97%) contrast(110%)",
-    slider: "voyage",
-  },
-  {
-    name: "Forest",
-    value: "hue-rotate(130deg) brightness(97%) contrast(108%)",
-    slider: "forest",
-  },
-  {
-    name: "Flamingo",
-    value: "hue-rotate(340deg) saturate(140%) brightness(108%)",
-    slider: "flamingo",
-  },
-  {
-    name: "Cyberpunk",
-    value: "hue-rotate(310deg) contrast(135%) brightness(95%) saturate(140%)",
-    slider: "cyberpunk",
-  },
-];
+import { filters } from "@/data";
 
 const ICONS = {
   brightness: <CiBrightnessUp size={16} />,
@@ -182,7 +86,6 @@ const GenerateBooth: React.FC = () => {
   const [filterValues, setFilterValues] = useState<Record<string, number>>({}); // Store slider values for each filter
   const [captureProgress, setCaptureProgress] = useState<string | null>(null);
   const [countdownTime, setCountdownTime] = useState<number>(3);
-
   const [adjustments, setAdjustments] = useState<Adjustments>({
     brightness: 0,
     contrast: 0,
@@ -193,7 +96,6 @@ const GenerateBooth: React.FC = () => {
     tone: 0,
     sharpness: 0,
   });
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [autoAdjustments, setAutoAdjustments] = useState<Adjustments>({
     brightness: 0,
@@ -250,8 +152,8 @@ const GenerateBooth: React.FC = () => {
         if (pathname !== "/generatebooth") return;
 
         stopCamera();
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        //update v1.2.1
+        await navigator.mediaDevices.getUserMedia({ video: true });
 
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
@@ -376,7 +278,7 @@ const GenerateBooth: React.FC = () => {
   const toggleMirror = () => {
     setIsMirrored((prev) => !prev);
   };
-  // Capture Photo
+  // Capture Photo update filter ios issues
   const capturePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -399,7 +301,11 @@ const GenerateBooth: React.FC = () => {
 
       // Apply the same filters used on video directly to canvas context
       const computedFilter = getComputedStyle(video).getPropertyValue("filter");
-      context.filter = computedFilter !== "none" ? computedFilter : "";
+
+      // Manually apply the filter to the canvas context
+      if (computedFilter !== "none") {
+        context.filter = computedFilter;
+      }
 
       if (isMirrored) {
         context.translate(canvas.width, 0);
@@ -417,23 +323,29 @@ const GenerateBooth: React.FC = () => {
     return null;
   };
 
-  // const stopCamera = () => {
-  //   if (videoRef.current && videoRef.current.srcObject) {
-  //     const stream = videoRef.current.srcObject as MediaStream;
-  //     const tracks = stream.getTracks();
-  //     tracks.forEach((track) => track.stop());
-  //     videoRef.current.srcObject = null;
-  //   }
-  // };
-  const stopCamera = () => {
+
+  const stopCamera = async () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => {
         track.stop();
-        track.enabled = false;
       });
       videoRef.current.srcObject = null;
     }
+
+    try {
+      const tracks = (
+        await navigator.mediaDevices.getUserMedia({ video: true })
+      ).getTracks();
+      tracks.forEach((track) => track.stop());
+    } catch (error) {
+      console.error("Error releasing camera permissions:", error);
+    }
+  };
+
+  const handleCameraOff = () => {
+    stopCamera();
+    setCameraOn((prev) => !prev);
   };
 
   const handleSliderChange = (value: number) => {
@@ -810,6 +722,7 @@ const GenerateBooth: React.FC = () => {
                     <SelectContent>
                       <SelectItem value="10">10s</SelectItem>
                       <SelectItem value="5">5s</SelectItem>
+                      <SelectItem value="4">4s</SelectItem>
                       <SelectItem value="3">3s</SelectItem>
                       <SelectItem value="2">2s</SelectItem>
                     </SelectContent>
@@ -844,7 +757,7 @@ const GenerateBooth: React.FC = () => {
 
             {/* Right Side - Camera On/Off Button */}
             <Button
-              onClick={() => setCameraOn((prev) => !prev)}
+              onClick={handleCameraOff}
               disabled={capturing}
               className="ml-auto dark:border bg-accent"
               variant={"ghost"}
@@ -854,20 +767,24 @@ const GenerateBooth: React.FC = () => {
           </div>
 
           <div className="flex justify-center items-center mx-auto gap-4 w-full">
-            {[1, 2, 3, 4].map((shot) => (
-              <Button
-                key={shot}
-                onClick={() => setNumShots(shot)}
-                className={`rounded-full ${
-                  numShots === shot
-                    ? "bg-primary dark:text-white text-xs"
-                    : "bg-accent dark:text-white text-black-100 text-xs"
-                }`}
-                disabled={capturing}
-              >
-                {shot} Shot{shot > 1 ? "s" : ""}
-              </Button>
-            ))}
+            {cameraOn && (
+              <>
+                {[1, 2, 3, 4].map((shot) => (
+                  <Button
+                    key={shot}
+                    onClick={() => setNumShots(shot)}
+                    className={`rounded-full ${
+                      numShots === shot
+                        ? "bg-primary dark:text-white text-xs"
+                        : "bg-accent dark:text-white text-black-100 text-xs"
+                    }`}
+                    disabled={capturing}
+                  >
+                    {shot} Shot{shot > 1 ? "s" : ""}
+                  </Button>
+                ))}
+              </>
+            )}
           </div>
         </div>
 
@@ -894,222 +811,228 @@ const GenerateBooth: React.FC = () => {
         )}
       </div>
 
-      <Tabs defaultValue="adjust" className="w-[350px] my-10 mx-8">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger
-            value="adjust"
-            className="flex items-center gap-2 text-xs"
-          >
-            <HiOutlineAdjustmentsHorizontal />
-            Adjust
-          </TabsTrigger>
-          <TabsTrigger
-            value="filters"
-            className="flex items-center gap-2 text-xs"
-          >
-            <IoIosColorFilter />
-            Filters
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="filters">
-          {/* Filter Section */}
-          <div className="text-center my-5 max-w-4xl">
-            <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
-              <ScrollArea className="w-full max-w-lg rounded-md border">
-                <div className="w-max space-x-4 p-4">
-                  {filters.map((item) => (
-                    <Popover key={item.name}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          onClick={() => {
-                            const savedValue =
-                              filterValues[item.slider as string] ?? 100;
-                            setSelectedFilter(item.slider || null);
-                            setSliderValue(savedValue);
-                            applyFilter(item.slider as string, savedValue);
-                          }}
-                          className={`min-w-[100px] ${
-                            selectedFilter === item.slider
-                              ? "bg-white text-black"
-                              : ""
-                          }`}
-                          disabled={capturing}
-                        >
-                          {item.name}
-                        </Button>
-                      </PopoverTrigger>
-                      {item.slider && (
+      {cameraOn && (
+        <>
+          <Tabs defaultValue="adjust" className="w-[350px] my-10 mx-8">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger
+                value="adjust"
+                className="flex items-center gap-2 text-xs"
+              >
+                <HiOutlineAdjustmentsHorizontal />
+                Adjust
+              </TabsTrigger>
+              <TabsTrigger
+                value="filters"
+                className="flex items-center gap-2 text-xs"
+              >
+                <IoIosColorFilter />
+                Filters
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="filters">
+              {/* Filter Section */}
+              <div className="text-center my-5 max-w-4xl">
+                <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
+                  <ScrollArea className="w-full max-w-lg rounded-md border">
+                    <div className="w-max space-x-4 p-4">
+                      {filters.map((item) => (
+                        <Popover key={item.name}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              onClick={() => {
+                                const savedValue =
+                                  filterValues[item.slider as string] ?? 100;
+                                setSelectedFilter(item.slider || null);
+                                setSliderValue(savedValue);
+                                applyFilter(item.slider as string, savedValue);
+                              }}
+                              className={`min-w-[100px] ${
+                                selectedFilter === item.slider
+                                  ? "bg-white text-black"
+                                  : ""
+                              }`}
+                              disabled={capturing}
+                            >
+                              {item.name}
+                            </Button>
+                          </PopoverTrigger>
+                          {item.slider && (
+                            <PopoverContent className="w-48">
+                              <p className="text-sm font-medium flex justify-between">
+                                {item.name} Intensity
+                                <span className="text-gray-500 text-xs">
+                                  {sliderValue}%
+                                </span>
+                              </p>
+                              <Slider
+                                value={[sliderValue]}
+                                onValueChange={(val) =>
+                                  handleSliderChange(val[0])
+                                }
+                                min={0}
+                                max={100}
+                                step={1}
+                              />
+                            </PopoverContent>
+                          )}
+                        </Popover>
+                      ))}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="adjust">
+              <div className="text-center my-2 max-w-4xl">
+                <div className="flex justify-end items-center w-full">
+                  <Button
+                    onClick={resetAllAdjustments}
+                    className="text-sm px-3 py-1 rounded-md"
+                    variant={"ghost"}
+                    disabled={capturing}
+                  >
+                    <RiResetLeftFill />
+                  </Button>
+                </div>
+                <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
+                  <ScrollArea className="w-full max-w-lg rounded-md border">
+                    <div className="flex w-max gap-8 p-4 ">
+                      {/* Auto Adjustment Button */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            onClick={toggleAuto}
+                            className="flex flex-col items-center gap-2"
+                            disabled={capturing}
+                          >
+                            <div
+                              className={`w-10 h-10 flex items-center justify-center rounded-full transition border ${
+                                selectedFilter === "auto" && autoValue !== 0
+                                  ? "bg-black-100 dark:bg-white"
+                                  : "bg-gray-300 dark:bg-accent hover:bg-gray-400 dark:hover:bg-gray-600"
+                              }`}
+                            >
+                              <span
+                                className={`${
+                                  selectedFilter === "auto" && autoValue !== 0
+                                    ? "text-white dark:text-black-100"
+                                    : "text-black-100 dark:text-white "
+                                } text-xl`}
+                              >
+                                <FaMagic size={12} />
+                              </span>
+                            </div>
+                            <span className="text-xs text-black dark:text-white">
+                              Auto
+                            </span>
+                          </button>
+                        </PopoverTrigger>
                         <PopoverContent className="w-48">
                           <p className="text-sm font-medium flex justify-between">
-                            {item.name} Intensity
+                            Auto Adjust
                             <span className="text-gray-500 text-xs">
-                              {sliderValue}%
+                              {autoValue}
                             </span>
                           </p>
                           <Slider
-                            value={[sliderValue]}
-                            onValueChange={(val) => handleSliderChange(val[0])}
+                            value={[autoValue]}
+                            onValueChange={(val) => handleAutoAdjust(val[0])}
                             min={0}
                             max={100}
                             step={1}
                           />
                         </PopoverContent>
-                      )}
-                    </Popover>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </div>
-          </div>
-        </TabsContent>
-        <TabsContent value="adjust">
-          <div className="text-center my-2 max-w-4xl">
-            <div className="flex justify-end items-center w-full">
-              <Button
-                onClick={resetAllAdjustments}
-                className="text-sm px-3 py-1 rounded-md"
-                variant={"ghost"}
-                disabled={capturing}
-              >
-                <RiResetLeftFill />
-              </Button>
-            </div>
-            <div className="flex flex-col items-center gap-4 py-2 max-w-96 md:max-w-lg">
-              <ScrollArea className="w-full max-w-lg rounded-md border">
-                <div className="flex w-max gap-8 p-4 ">
-                  {/* Auto Adjustment Button */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        onClick={toggleAuto}
-                        className="flex flex-col items-center gap-2"
-                        disabled={capturing}
-                      >
-                        <div
-                          className={`w-10 h-10 flex items-center justify-center rounded-full transition border ${
-                            selectedFilter === "auto" && autoValue !== 0
-                              ? "bg-black-100 dark:bg-white"
-                              : "bg-gray-300 dark:bg-accent hover:bg-gray-400 dark:hover:bg-gray-600"
-                          }`}
-                        >
-                          <span
-                            className={`${
-                              selectedFilter === "auto" && autoValue !== 0
-                                ? "text-white dark:text-black-100"
-                                : "text-black-100 dark:text-white "
-                            } text-xl`}
-                          >
-                            <FaMagic size={12} />
-                          </span>
-                        </div>
-                        <span className="text-xs text-black dark:text-white">
-                          Auto
-                        </span>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48">
-                      <p className="text-sm font-medium flex justify-between">
-                        Auto Adjust
-                        <span className="text-gray-500 text-xs">
-                          {autoValue}
-                        </span>
-                      </p>
-                      <Slider
-                        value={[autoValue]}
-                        onValueChange={(val) => handleAutoAdjust(val[0])}
-                        min={0}
-                        max={100}
-                        step={1}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                      </Popover>
 
-                  {/* Individual Adjustment Buttons + Sliders */}
-                  {Object.entries(adjustments).map(([key, value]) => (
-                    <Popover
-                      key={key}
-                      onOpenChange={(open) =>
-                        handleOpenChange(key as keyof Adjustments, open)
-                      }
-                    >
-                      <PopoverTrigger asChild>
-                        <button
-                          disabled={capturing}
-                          onClick={() => {
-                            if (selectedFilter === key) {
-                              setSelectedFilter(null);
-                            } else {
-                              handleAdjustmentChange(
-                                key as keyof Adjustments,
-                                value
-                              );
-                            }
-                          }}
-                          className={`flex flex-col items-center gap-2`}
+                      {/* Individual Adjustment Buttons + Sliders */}
+                      {Object.entries(adjustments).map(([key, value]) => (
+                        <Popover
+                          key={key}
+                          onOpenChange={(open) =>
+                            handleOpenChange(key as keyof Adjustments, open)
+                          }
                         >
-                          <div
-                            className={`w-10 h-10 flex items-center justify-center rounded-full transition border ${
-                              value !== 0
-                                ? "bg-black-100 dark:bg-white"
-                                : "bg-gray-300 dark:bg-accent hover:bg-gray-400 dark:hover:bg-gray-600"
-                            }`}
-                          >
-                            <span
-                              className={`${
-                                value !== 0
-                                  ? "text-white dark:text-black-100"
-                                  : "text-black dark:text-white"
-                              } text-xl`}
+                          <PopoverTrigger asChild>
+                            <button
+                              disabled={capturing}
+                              onClick={() => {
+                                if (selectedFilter === key) {
+                                  setSelectedFilter(null);
+                                } else {
+                                  handleAdjustmentChange(
+                                    key as keyof Adjustments,
+                                    value
+                                  );
+                                }
+                              }}
+                              className={`flex flex-col items-center gap-2`}
                             >
-                              {ICONS[key as keyof Adjustments]}
-                            </span>
-                          </div>
-                          <span className="text-xs text-black dark:text-white text-center">
-                            {key === "colorTemperature" ? (
-                              <>
-                                <span className="block">Color</span>
-                                <span className="block">Temperature</span>
-                              </>
-                            ) : (
-                              key.charAt(0).toUpperCase() + key.slice(1)
-                            )}
-                          </span>
-                        </button>
-                      </PopoverTrigger>
-                      {selectedFilter === key && (
-                        <PopoverContent className="w-48">
-                          <p className="text-sm font-medium flex justify-between">
-                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                            <span className="text-gray-500 text-xs">
-                              {sliderValue}
-                            </span>
-                          </p>
-                          <Slider
-                            value={[sliderValue]}
-                            onValueChange={(val) => {
-                              handleAdjustmentChange(
-                                key as keyof Adjustments,
-                                val[0]
-                              );
-                              setSliderValue(val[0]);
-                            }}
-                            min={key === "sharpness" ? 0 : -100}
-                            max={key === "sharpness" ? 100 : 100}
-                            step={1}
-                          />
-                        </PopoverContent>
-                      )}
-                    </Popover>
-                  ))}
+                              <div
+                                className={`w-10 h-10 flex items-center justify-center rounded-full transition border ${
+                                  value !== 0
+                                    ? "bg-black-100 dark:bg-white"
+                                    : "bg-gray-300 dark:bg-accent hover:bg-gray-400 dark:hover:bg-gray-600"
+                                }`}
+                              >
+                                <span
+                                  className={`${
+                                    value !== 0
+                                      ? "text-white dark:text-black-100"
+                                      : "text-black dark:text-white"
+                                  } text-xl`}
+                                >
+                                  {ICONS[key as keyof Adjustments]}
+                                </span>
+                              </div>
+                              <span className="text-xs text-black dark:text-white text-center">
+                                {key === "colorTemperature" ? (
+                                  <>
+                                    <span className="block">Color</span>
+                                    <span className="block">Temperature</span>
+                                  </>
+                                ) : (
+                                  key.charAt(0).toUpperCase() + key.slice(1)
+                                )}
+                              </span>
+                            </button>
+                          </PopoverTrigger>
+                          {selectedFilter === key && (
+                            <PopoverContent className="w-48">
+                              <p className="text-sm font-medium flex justify-between">
+                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                <span className="text-gray-500 text-xs">
+                                  {sliderValue}
+                                </span>
+                              </p>
+                              <Slider
+                                value={[sliderValue]}
+                                onValueChange={(val) => {
+                                  handleAdjustmentChange(
+                                    key as keyof Adjustments,
+                                    val[0]
+                                  );
+                                  setSliderValue(val[0]);
+                                }}
+                                min={key === "sharpness" ? 0 : -100}
+                                max={key === "sharpness" ? 100 : 100}
+                                step={1}
+                              />
+                            </PopoverContent>
+                          )}
+                        </Popover>
+                      ))}
+                    </div>
+                    {/* Fix ScrollBar Visibility */}
+                    <ScrollBar orientation="horizontal" className="mt-2" />
+                  </ScrollArea>
                 </div>
-                {/* Fix ScrollBar Visibility */}
-                <ScrollBar orientation="horizontal" className="mt-2" />
-              </ScrollArea>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   );
 };
