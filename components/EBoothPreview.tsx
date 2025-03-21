@@ -29,6 +29,7 @@ import Image from "next/image";
 import { Badge } from "./ui/badge";
 import { fontOptions, fontSizeOptions, frames, stickers } from "@/data";
 import { Slider } from "./ui/slider";
+import { useCamera } from "@/context/CameraContext";
 
 interface PhotoPreviewProps {
   capturedImages: string[];
@@ -68,6 +69,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const [selectedFont, setSelectedFont] = useState<string>("Arial");
   const [fontSize, setFontSize] = useState<number>(20);
   const [radius, setRadius] = useState<number>(10);
+  const { stopCamera } = useCamera();
 
   const toggleBold = () => setIsBold((prev) => !prev);
   const toggleItalic = () => setIsItalic((prev) => !prev);
@@ -900,10 +902,21 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             <Button
               onClick={async () => {
                 try {
-                  const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                  await new Promise((resolve) => setTimeout(resolve, 100));
+
+                  // Stop existing stream properly
+                  stopCamera();
+
+                  const permissionStatus = await navigator.permissions.query({
+                    name: "camera" as PermissionName,
                   });
-                  stream.getTracks().forEach((track) => track.stop());
+
+                  if (permissionStatus.state === "denied") {
+                    alert(
+                      "Camera access is denied. Please enable it in your browser settings."
+                    );
+                    return;
+                  }
 
                   router.push("/generatebooth");
                 } catch (error) {
