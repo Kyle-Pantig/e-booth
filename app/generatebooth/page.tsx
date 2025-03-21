@@ -166,6 +166,8 @@ const GenerateBooth: React.FC = () => {
 
         stopCamera();
         //update v1.2.1
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         await navigator.mediaDevices.getUserMedia({ video: true });
 
         const permissionStatus = await navigator.permissions.query({
