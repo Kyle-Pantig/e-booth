@@ -132,6 +132,54 @@ export const stickers: Record<string, Sticker[]> = {
       height: 120,
     },
   ],
+  "teddy-bear-1": [
+    {
+      id: "teddy-bear-1",
+      src: "/stickers/teddy-bear-1.png",
+      x: 30,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+  ],
+
+  "teddy-bear-2": [
+    {
+      id: "teddy-bear-2",
+      src: "/stickers/teddy-bear-2.png",
+      x: (totalWidth: number) => totalWidth - 120,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+    {
+      id: "hello",
+      src: "/stickers/hello.png",
+      x: 30,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+  ],
+
+  "school": [
+    {
+      id: "school",
+      src: "/stickers/school.png",
+      x: (totalWidth: number) => totalWidth - 120,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 120,
+      height: 120,
+    },
+    {
+      id: "award",
+      src: "/stickers/award.png",
+      x: 30,
+      y: (totalHeight: number) => totalHeight - 120,
+      width: 110,
+      height: 110,
+    },
+  ],
 };
 
 type Frame = {

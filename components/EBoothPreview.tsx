@@ -12,7 +12,6 @@ import EmojiPicker from "emoji-picker-react";
 import { MdBlock } from "react-icons/md";
 import { toast } from "sonner";
 import { Checkbox } from "./ui/checkbox";
-import { BiBold, BiItalic } from "react-icons/bi";
 import {
   Select,
   SelectContent,
@@ -30,6 +29,8 @@ import { Badge } from "./ui/badge";
 import { fontOptions, fontSizeOptions, frames, stickers } from "@/data";
 import { Slider } from "./ui/slider";
 import { useCamera } from "@/context/CameraContext";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Bold, Italic } from "lucide-react";
 
 interface PhotoPreviewProps {
   capturedImages: string[];
@@ -71,8 +72,10 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const [radius, setRadius] = useState<number>(10);
   const { stopCamera } = useCamera();
 
-  const toggleBold = () => setIsBold((prev) => !prev);
-  const toggleItalic = () => setIsItalic((prev) => !prev);
+  const handleToggle = (values: string[]) => {
+    setIsBold(values.includes("bold"));
+    setIsItalic(values.includes("italic"));
+  };
 
   const MAX_LENGTH = 20;
 
@@ -774,33 +777,6 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 <FaSmile size={20} />
               </button>
             </div>
-            {/* Bold Toggle */}
-            <Button
-              variant={"ghost"}
-              className="bg-accent rounded-none border dark:border-none"
-              onClick={toggleBold}
-              style={{ padding: "5px" }}
-            >
-              {isBold ? (
-                <BiBold className="text-red-500" size={24} />
-              ) : (
-                <BiBold className="text-black dark:text-white" size={24} />
-              )}
-            </Button>
-
-            {/* Italic Toggle */}
-            <Button
-              variant={"ghost"}
-              className="bg-accent rounded-none border dark:border-none"
-              onClick={toggleItalic}
-              style={{ padding: "5px" }}
-            >
-              {isItalic ? (
-                <BiItalic className="text-red-500" size={24} />
-              ) : (
-                <BiItalic className="text-black dark:text-white" size={24} />
-              )}
-            </Button>
 
             {/* Emoji Picker */}
             {showPicker && (
@@ -849,6 +825,34 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 ))}
               </SelectContent>
             </Select>
+
+            <ToggleGroup
+              variant="outline"
+              type="multiple"
+              value={
+                [
+                  isBold ? "bold" : undefined,
+                  isItalic ? "italic" : undefined,
+                ].filter(Boolean) as string[]
+              }
+              onValueChange={handleToggle}
+              className="space-x-1"
+            >
+              <ToggleGroupItem
+                value="bold"
+                aria-label="Toggle bold"
+                className="shadow border bg-white dark:bg-accent border-input data-[state=on]:!bg-primary data-[state=on]:!text-white"
+              >
+                <Bold className="h-4 w-4 text-black-100 dark:text-white" />
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="italic"
+                aria-label="Toggle italic"
+                className="shadow border bg-white dark:bg-accent border-input data-[state=on]:!bg-primary data-[state=on]:!text-white"
+              >
+                <Italic className="h-4 w-4 text-black-100 dark:text-white" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
           <div className="w-64 my-6 relative">
             <div className="flex items-center mb-4">
@@ -902,10 +906,10 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             <Button
               onClick={async () => {
                 try {
-                  await new Promise((resolve) => setTimeout(resolve, 100));
-
-                  // Stop existing stream properly
                   stopCamera();
+
+                  // Give the camera some time to stop before navigating
+                  await new Promise((resolve) => setTimeout(resolve, 100));
 
                   const permissionStatus = await navigator.permissions.query({
                     name: "camera" as PermissionName,
