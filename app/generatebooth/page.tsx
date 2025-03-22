@@ -83,8 +83,8 @@ const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
   const pathname = usePathname();
-  const {videoRef, stopCamera} = useCamera();
-  
+  const { videoRef, stopCamera } = useCamera();
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
   const [capturedImages, setImages] = useState<string[]>([]);
@@ -166,7 +166,7 @@ const GenerateBooth: React.FC = () => {
 
         stopCamera();
         //update v1.2.1
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
@@ -182,9 +182,10 @@ const GenerateBooth: React.FC = () => {
         const constraints = {
           video: {
             deviceId: { exact: deviceId },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
             frameRate: { ideal: 30 },
+            aspectRatio: { ideal: 16/9 },
           },
         };
 
@@ -194,7 +195,7 @@ const GenerateBooth: React.FC = () => {
 
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
-          await videoRef.current.play();
+          await videoRef.current?.play();
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
@@ -295,7 +296,7 @@ const GenerateBooth: React.FC = () => {
   const capturePhoto = (): string | null => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-  
+
     if (video && canvas) {
       // ✅ Set willReadFrequently to true for better performance
       const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -303,14 +304,14 @@ const GenerateBooth: React.FC = () => {
         console.error("Failed to get 2D context.");
         return null;
       }
-  
+
       // Match canvas size with video stream's resolution
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
-  
+
       canvas.width = videoWidth;
       canvas.height = videoHeight;
-  
+
       // First draw the video frame to canvas
       if (isMirrored) {
         context.save();
@@ -321,39 +322,40 @@ const GenerateBooth: React.FC = () => {
       } else {
         context.drawImage(video, 0, 0, videoWidth, videoHeight);
       }
-  
+
       // For iOS, we'll manually apply the filters using a second canvas
       const tempCanvas = document.createElement("canvas");
       tempCanvas.width = videoWidth;
       tempCanvas.height = videoHeight;
-  
+
       // ✅ Also set willReadFrequently to true for temp context
-      const tempContext = tempCanvas.getContext("2d", { willReadFrequently: true });
-  
+      const tempContext = tempCanvas.getContext("2d", {
+        willReadFrequently: true,
+      });
+
       if (tempContext && filter !== "none") {
         // Parse the filter string to get individual filter values
         const filterValues = parseFilterString(filter);
-  
+
         // ✅ Get the image data from the first canvas with better performance
         const imageData = context.getImageData(0, 0, videoWidth, videoHeight);
-  
+
         // Apply each filter manually
         applyFiltersToImageData(imageData, filterValues);
-  
+
         // Put the modified image data back to the temp canvas
         tempContext.putImageData(imageData, 0, 0);
-  
+
         // Clear the original canvas and draw the filtered image
         context.clearRect(0, 0, videoWidth, videoHeight);
         context.drawImage(tempCanvas, 0, 0);
       }
-  
+
       // ✅ Return captured image as base64
       return canvas.toDataURL("image/png");
     }
     return null;
   };
-  
 
   // Helper function to parse filter string into an object with values
   const parseFilterString = (filterString: string): FilterValues => {
@@ -890,7 +892,7 @@ const GenerateBooth: React.FC = () => {
                   playsInline
                   autoPlay
                   muted
-                  className="video-feed w-full h-full max-w-[20.5rem] sm:max-w-[26rem] md:max-w-[30rem]  object-cover rounded-lg"
+                  className="video-feed w-full h-full max-w-[20.5rem] sm:max-w-[26rem] md:max-w-[30rem] object-cover rounded-lg"
                   style={{
                     WebkitFilter: filter,
                     filter,
@@ -899,6 +901,7 @@ const GenerateBooth: React.FC = () => {
                     backfaceVisibility: "hidden",
                     WebkitTransform: isMirrored ? "scaleX(-1)" : "none",
                     WebkitBackfaceVisibility: "hidden",
+                    objectFit: "cover", // Ensure consistent object-fit
                   }}
                 />
 

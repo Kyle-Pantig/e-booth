@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef } from "react";
+import { createContext, useCallback, useContext, useRef } from "react";
 
 type CameraContextType = {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -12,15 +12,14 @@ const CameraContext = createContext<CameraContextType | undefined>(undefined);
 export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => {
-        track.stop();
-      });
-      videoRef.current.srcObject = null;
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop()); // Stop all tracks
+      videoRef.current.srcObject = null; // Clear the srcObject
     }
-  };
+  }, [videoRef]);
 
   return (
     <CameraContext.Provider value={{ videoRef, stopCamera }}>

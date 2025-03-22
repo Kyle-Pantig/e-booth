@@ -909,7 +909,7 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                   stopCamera();
 
                   // Give the camera some time to stop before navigating
-                  await new Promise((resolve) => setTimeout(resolve, 200));
+                  await new Promise((resolve) => setTimeout(resolve, 100));
 
                   const permissionStatus = await navigator.permissions.query({
                     name: "camera" as PermissionName,
