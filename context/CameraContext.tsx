@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { createContext, useContext, useRef } from "react";
 
 type CameraContextType = {
@@ -11,22 +12,17 @@ const CameraContext = createContext<CameraContextType | undefined>(undefined);
 
 export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const pathname = usePathname();
 
   const stopCamera = async () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => {
-        track.stop();
-      });
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
   
-    const existingStreams = await navigator.mediaDevices.enumerateDevices();
-    const isCameraActive = existingStreams.some(
-      (device) => device.kind === "videoinput"
-    );
-  
-    if (isCameraActive) {
+    // ✅ Only stop permissions if on the home page `/`
+    if (pathname === "/generatebooth") {
       try {
         const tracks = (
           await navigator.mediaDevices.getUserMedia({ video: true })
@@ -37,7 +33,6 @@ export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
   };
-  
 
   return (
     <CameraContext.Provider value={{ videoRef, stopCamera }}>
