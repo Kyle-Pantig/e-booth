@@ -166,7 +166,7 @@ const GenerateBooth: React.FC = () => {
 
         stopCamera();
         //update v1.2.1
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         const permissionStatus = await navigator.permissions.query({
           name: "camera" as PermissionName,
@@ -181,10 +181,11 @@ const GenerateBooth: React.FC = () => {
 
         const constraints = {
           video: {
-            deviceId: { exact: deviceId },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            width: { exact: 1280 },
+            height: { exact: 720 },
             frameRate: { ideal: 30 },
+            facingMode: "user", 
           },
         };
 
