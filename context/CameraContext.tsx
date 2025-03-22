@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { createContext, useContext, useRef } from "react";
 
 type CameraContextType = {
@@ -12,7 +11,6 @@ const CameraContext = createContext<CameraContextType | undefined>(undefined);
 
 export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const pathname = usePathname();
 
   const stopCamera = async () => {
     if (videoRef.current && videoRef.current.srcObject) {
@@ -20,17 +18,15 @@ export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
       stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
-  
+
     // ✅ Only stop permissions if on the home page `/`
-    if (pathname === "/generatebooth") {
-      try {
-        const tracks = (
-          await navigator.mediaDevices.getUserMedia({ video: true })
-        ).getTracks();
-        tracks.forEach((track) => track.stop());
-      } catch (error) {
-        console.error("Error releasing camera permissions:", error);
-      }
+    try {
+      const tracks = (
+        await navigator.mediaDevices.getUserMedia({ video: true })
+      ).getTracks();
+      tracks.forEach((track) => track.stop());
+    } catch (error) {
+      console.error("Error releasing camera permissions:", error);
     }
   };
 
