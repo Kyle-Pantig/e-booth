@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 
 type CameraContextType = {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -12,14 +12,24 @@ const CameraContext = createContext<CameraContextType | undefined>(undefined);
 export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const stopCamera = useCallback(() => {
+  const stopCamera = async () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach((track) => track.stop()); // Stop all tracks
-      videoRef.current.srcObject = null; // Clear the srcObject
+      stream.getTracks().forEach((track) => {
+        track.stop();
+      });
+      videoRef.current.srcObject = null;
     }
-  }, [videoRef]);
+
+    try {
+      const tracks = (
+        await navigator.mediaDevices.getUserMedia({ video: true })
+      ).getTracks();
+      tracks.forEach((track) => track.stop());
+    } catch (error) {
+      console.error("Error releasing camera permissions:", error);
+    }
+  };
 
   return (
     <CameraContext.Provider value={{ videoRef, stopCamera }}>
