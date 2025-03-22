@@ -20,16 +20,24 @@ export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
       });
       videoRef.current.srcObject = null;
     }
-
-    try {
-      const tracks = (
-        await navigator.mediaDevices.getUserMedia({ video: true })
-      ).getTracks();
-      tracks.forEach((track) => track.stop());
-    } catch (error) {
-      console.error("Error releasing camera permissions:", error);
+  
+    const existingStreams = await navigator.mediaDevices.enumerateDevices();
+    const isCameraActive = existingStreams.some(
+      (device) => device.kind === "videoinput"
+    );
+  
+    if (isCameraActive) {
+      try {
+        const tracks = (
+          await navigator.mediaDevices.getUserMedia({ video: true })
+        ).getTracks();
+        tracks.forEach((track) => track.stop());
+      } catch (error) {
+        console.error("Error releasing camera permissions:", error);
+      }
     }
   };
+  
 
   return (
     <CameraContext.Provider value={{ videoRef, stopCamera }}>
