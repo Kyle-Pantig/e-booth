@@ -181,11 +181,10 @@ const GenerateBooth: React.FC = () => {
 
         const constraints = {
           video: {
-            deviceId: deviceId ? { exact: deviceId } : undefined,
-            width: { exact: 1280 },
-            height: { exact: 720 },
+            deviceId: { exact: deviceId },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
             frameRate: { ideal: 30 },
-            facingMode: "user", 
           },
         };
 
