@@ -12,16 +12,22 @@ const CameraContext = createContext<CameraContextType | undefined>(undefined);
 export const CameraProvider = ({ children }: { children: React.ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const stopCamera = () => {
+  const stopCamera = async () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => {
-        track.stop();
-      });
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
-  };
 
+    try {
+      const tracks = (
+        await navigator.mediaDevices.getUserMedia({ video: true })
+      ).getTracks();
+      tracks.forEach((track) => track.stop());
+    } catch (error) {
+      console.error("Error releasing camera permissions:", error);
+    }
+  };
 
   return (
     <CameraContext.Provider value={{ videoRef, stopCamera }}>
