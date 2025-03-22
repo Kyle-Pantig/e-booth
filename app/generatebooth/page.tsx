@@ -194,7 +194,7 @@ const GenerateBooth: React.FC = () => {
 
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
-          await videoRef.current?.play();
+          await videoRef.current.play();
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
@@ -900,7 +900,6 @@ const GenerateBooth: React.FC = () => {
                     backfaceVisibility: "hidden",
                     WebkitTransform: isMirrored ? "scaleX(-1)" : "none",
                     WebkitBackfaceVisibility: "hidden",
-                    objectFit: "cover", // Ensure consistent object-fit
                   }}
                 />
 

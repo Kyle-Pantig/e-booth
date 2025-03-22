@@ -906,10 +906,11 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
             <Button
               onClick={async () => {
                 try {
-                  stopCamera();
 
                   // Give the camera some time to stop before navigating
                   await new Promise((resolve) => setTimeout(resolve, 100));
+
+                  stopCamera();
 
                   const permissionStatus = await navigator.permissions.query({
                     name: "camera" as PermissionName,
