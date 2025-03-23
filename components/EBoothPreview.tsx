@@ -28,7 +28,6 @@ import Image from "next/image";
 import { Badge } from "./ui/badge";
 import { fontOptions, fontSizeOptions, frames, stickers } from "@/data";
 import { Slider } from "./ui/slider";
-import { useCamera } from "@/context/CameraContext";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { Bold, Italic } from "lucide-react";
 
@@ -70,7 +69,6 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
   const [selectedFont, setSelectedFont] = useState<string>("Arial");
   const [fontSize, setFontSize] = useState<number>(20);
   const [radius, setRadius] = useState<number>(10);
-  const { stopCamera } = useCamera();
 
   const handleToggle = (values: string[]) => {
     setIsBold(values.includes("bold"));
@@ -904,30 +902,8 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
 
             {/* //update v1.2.1 */}
             <Button
-              onClick={async () => {
-                try {
-
-                  // Give the camera some time to stop before navigating
-                  await new Promise((resolve) => setTimeout(resolve, 100));
-
-                  stopCamera();
-
-                  const permissionStatus = await navigator.permissions.query({
-                    name: "camera" as PermissionName,
-                  });
-
-                  if (permissionStatus.state === "denied") {
-                    alert(
-                      "Camera access is denied. Please enable it in your browser settings."
-                    );
-                    return;
-                  }
-
-                  router.push("/generatebooth");
-                } catch (error) {
-                  console.error("Error accessing camera:", error);
-                  alert("Please allow camera permissions to proceed.");
-                }
+              onClick={() => {
+                router.push("/generatebooth");
               }}
             >
               Take New Photos <FaRepeat />

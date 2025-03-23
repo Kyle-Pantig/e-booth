@@ -1,15 +1,13 @@
 "use client";
 
-import { useCamera } from "@/context/CameraContext";
 import Image from "next/image";
 import Link from "next/link";
 
 const Header = () => {
-  const { stopCamera } = useCamera();
 
   return (
     <header className="flex justify-center items-center px-4 md:px-8 py-3 z-50">
-      <Link href="/" className="flex items-center gap-1" onClick={stopCamera}>
+      <Link href="/" className="flex items-center gap-1">
         <Image
           src="/logo.png"
           alt="Logo"
