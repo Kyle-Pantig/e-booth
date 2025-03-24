@@ -122,17 +122,11 @@ const GenerateBooth: React.FC = () => {
   });
 
   const [autoValue, setAutoValue] = useState<number>(50);
+  
   useEffect(() => {
     if (webcamRef.current && selectedDeviceId) {
-      const track = webcamRef.current.stream?.getVideoTracks()[0];
-      if (track) {
-        track.stop();
-        
-        setTimeout(() => {
-          setCameraOn(false);
-          setTimeout(() => setCameraOn(true), 100);
-        }, 100);
-      }
+      setCameraOn(false);
+      setTimeout(() => setCameraOn(true), 100);
     }
   }, [selectedDeviceId]);
 
