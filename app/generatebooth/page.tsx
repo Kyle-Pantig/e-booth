@@ -124,10 +124,29 @@ const GenerateBooth: React.FC = () => {
   const [autoValue, setAutoValue] = useState<number>(50);
   
   useEffect(() => {
-    if (webcamRef.current && selectedDeviceId) {
-      setCameraOn(false);
-      setTimeout(() => setCameraOn(true), 100);
-    }
+    const initializeWebcam = async () => {
+      if (webcamRef.current && selectedDeviceId) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { min: 30, max: 60 },
+            },
+          });
+          if (webcamRef.current.video) {
+            webcamRef.current.video.srcObject = stream;
+          }
+          setCameraOn(true);
+        } catch (error) {
+          console.error("Error accessing webcam:", error);
+          setCameraOn(false);
+        }
+      }
+    };
+
+    initializeWebcam();
   }, [selectedDeviceId]);
 
   const handleSelectCamera = (deviceId: string) => {
