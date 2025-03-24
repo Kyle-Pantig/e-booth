@@ -124,17 +124,20 @@ const GenerateBooth: React.FC = () => {
   const [autoValue, setAutoValue] = useState<number>(50);
   useEffect(() => {
     if (webcamRef.current && selectedDeviceId) {
-      const track = webcamRef.current.stream?.getVideoTracks()[0];
-      if (track) {
-        track.stop();
-        
-        setTimeout(() => {
-          setCameraOn(false);
-          setTimeout(() => setCameraOn(true), 100);
-        }, 100);
+      const stream = webcamRef.current.stream;
+      if (stream) {
+        // Stop all video tracks
+        stream.getTracks().forEach(track => track.stop());
       }
+      
+      // Short delay before restarting
+      setCameraOn(false);
+      const timeout = setTimeout(() => setCameraOn(true), 100);
+  
+      return () => clearTimeout(timeout); // Clean up on unmount
     }
   }, [selectedDeviceId]);
+  
 
   const handleSelectCamera = (deviceId: string) => {
     setSelectedDeviceId(deviceId);
@@ -789,6 +792,7 @@ const GenerateBooth: React.FC = () => {
               <>
                 {/* Video Feed using react-webcam */}
                 <Webcam
+                  key={selectedDeviceId}
                   ref={webcamRef}
                   audio={false}
                   videoConstraints={{
