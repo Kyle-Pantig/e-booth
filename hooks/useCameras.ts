@@ -11,9 +11,6 @@ export const useCameras = () => {
 
   const getCameras = useCallback(async () => {
     try {
-      // Request permission first
-      await navigator.mediaDevices.getUserMedia({ video: true });
-      
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices
         .filter((device) => device.kind === "videoinput")
@@ -21,9 +18,9 @@ export const useCameras = () => {
           deviceId: device.deviceId,
           label: device.label || `Camera ${devices.indexOf(device) + 1}`,
         }));
-  
+
       setDevices(videoDevices);
-  
+
       if (videoDevices.length > 0) {
         setSelectedDeviceId((prev) =>
           videoDevices.some((device) => device.deviceId === prev)
@@ -35,7 +32,6 @@ export const useCameras = () => {
       console.error("Error fetching cameras:", error);
     }
   }, []);
-  
 
   useEffect(() => {
     getCameras();
