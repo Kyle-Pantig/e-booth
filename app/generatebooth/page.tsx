@@ -3,7 +3,7 @@ import SelectCamera from "@/components/SelectCamera";
 import { Button } from "@/components/ui/button";
 import { useCapturedImages } from "@/context/CapturedImagesContext";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { IoIosColorFilter } from "react-icons/io";
@@ -140,59 +140,6 @@ const GenerateBooth: React.FC = () => {
   useEffect(() => {
     getCameras();
   }, []);
-
-  const startCamera = useCallback(
-    async (deviceId: string) => {
-      try {
-
-        //update v1.2.1
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        const permissionStatus = await navigator.permissions.query({
-          name: "camera" as PermissionName,
-        });
-
-        if (permissionStatus.state === "denied") {
-          alert(
-            "Camera access is denied. Please enable it in your browser settings."
-          );
-          return;
-        }
-
-        const constraints = {
-          video: {
-            deviceId: { exact: deviceId },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            frameRate: { min: 30, max: 60 },
-          },
-        };
-
-        const newStream = await navigator.mediaDevices.getUserMedia(
-          constraints
-        );
-
-        if (webcamRef.current && webcamRef.current.video) {
-          const videoElement = webcamRef.current.video;
-          videoElement.srcObject = newStream;
-          await videoElement.play();
-        }
-      } catch (error) {
-        console.error("Error accessing camera:", error);
-        alert(
-          "Error accessing the camera. Make sure you have allowed camera permissions."
-        );
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (cameraOn && selectedDeviceId) {
-      startCamera(selectedDeviceId);
-    } else {
-    }
-  }, [cameraOn, selectedDeviceId, startCamera]);
 
   const triggerFlash = () => {
     if (flashRef.current) {
