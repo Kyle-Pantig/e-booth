@@ -2,8 +2,8 @@
 import SelectCamera from "@/components/SelectCamera";
 import { Button } from "@/components/ui/button";
 import { useCapturedImages } from "@/context/CapturedImagesContext";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { IoIosColorFilter } from "react-icons/io";
@@ -43,8 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { filters } from "@/data";
-import Webcam from "react-webcam";
-import { useCameras } from "@/hooks/useCameras";
+import { useCamera } from "@/context/CameraContext";
 
 const ICONS = {
   brightness: <CiBrightnessUp size={16} />,
@@ -83,8 +82,8 @@ interface FilterValues {
 const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
-  const webcamRef = useRef<Webcam>(null);
-  const { devices, selectedDeviceId, setSelectedDeviceId } = useCameras();
+  const pathname = usePathname();
+  const { videoRef, stopCamera } = useCamera();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
@@ -92,6 +91,7 @@ const GenerateBooth: React.FC = () => {
   const [filter, setFilter] = useState<string>("none");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturing, setCapturing] = useState<boolean>(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState<number>(100);
@@ -123,41 +123,88 @@ const GenerateBooth: React.FC = () => {
 
   const [autoValue, setAutoValue] = useState<number>(50);
 
+  const getCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(
+        (device) => device.kind === "videoinput"
+      );
+
+      if (videoDevices.length > 0) {
+        setSelectedDeviceId(videoDevices[0].deviceId);
+      }
+    } catch (error) {
+      console.error("Error fetching cameras:", error);
+    }
+  };
+
   useEffect(() => {
-    const initializeCamera = async () => {
+    if (pathname === "/generatebooth") {
+      getCameras();
+      setCameraOn(true);
+    } else {
+      setCameraOn(false);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    getCameras();
+  }, []);
+
+  const startCamera = useCallback(
+    async (deviceId: string) => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (webcamRef.current) {
-          webcamRef.current.stream = stream;
-          setCameraOn(true);
+        if (pathname !== "/generatebooth") return;
+
+        stopCamera();
+        //update v1.2.1
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const permissionStatus = await navigator.permissions.query({
+          name: "camera" as PermissionName,
+        });
+
+        if (permissionStatus.state === "denied") {
+          alert(
+            "Camera access is denied. Please enable it in your browser settings."
+          );
+          return;
+        }
+
+        const constraints = {
+          video: {
+            deviceId: { exact: deviceId },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 },
+          },
+        };
+
+        const newStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+          await videoRef.current.play();
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
-        setCameraOn(false);
+        alert(
+          "Error accessing the camera. Make sure you have allowed camera permissions."
+        );
       }
-    };
+    },
+    [pathname, stopCamera, videoRef]
+  );
 
-    initializeCamera();
-  }, []);
-  
   useEffect(() => {
-    if (webcamRef.current && selectedDeviceId) {
-      const track = webcamRef.current.stream?.getVideoTracks()[0];
-      if (track) {
-        track.stop();
-        
-        setTimeout(() => {
-          setCameraOn(false);
-          setTimeout(() => setCameraOn(true), 100);
-        }, 100);
-      }
+    if (cameraOn && selectedDeviceId) {
+      startCamera(selectedDeviceId);
+    } else {
+      stopCamera();
     }
-  }, [selectedDeviceId]);
-
-  const handleSelectCamera = (deviceId: string) => {
-    setSelectedDeviceId(deviceId);
-  };
-  
+  }, [cameraOn, selectedDeviceId, startCamera, stopCamera]);
   const triggerFlash = () => {
     if (flashRef.current) {
       flashRef.current.style.opacity = "1";
@@ -190,6 +237,11 @@ const GenerateBooth: React.FC = () => {
         try {
           setCapturedImages([...newCapturedImages]);
           setImages([...newCapturedImages]);
+
+          stopCamera();
+
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
           router.push("/photopreview");
         } catch (error) {
           console.error("Error navigating to preview:", error);
@@ -218,7 +270,7 @@ const GenerateBooth: React.FC = () => {
             photosTaken += 1;
             setCaptureProgress(`Capturing ${photosTaken}/${numShots}`);
 
-            //Recursively call to capture the next photo
+            // ✅ Recursively call to capture the next photo
             setTimeout(captureSequence, 1000);
           }, 200);
         }
@@ -233,11 +285,11 @@ const GenerateBooth: React.FC = () => {
   };
   // Capture Photo update filter ios issues
   const capturePhoto = (): string | null => {
-    const video = webcamRef.current?.video;
+    const video = videoRef.current;
     const canvas = canvasRef.current;
 
     if (video && canvas) {
-      // Set willReadFrequently to true for better performance
+      // ✅ Set willReadFrequently to true for better performance
       const context = canvas.getContext("2d", { willReadFrequently: true });
       if (!context) {
         console.error("Failed to get 2D context.");
@@ -267,7 +319,7 @@ const GenerateBooth: React.FC = () => {
       tempCanvas.width = videoWidth;
       tempCanvas.height = videoHeight;
 
-      // Also set willReadFrequently to true for temp context
+      // ✅ Also set willReadFrequently to true for temp context
       const tempContext = tempCanvas.getContext("2d", {
         willReadFrequently: true,
       });
@@ -276,7 +328,7 @@ const GenerateBooth: React.FC = () => {
         // Parse the filter string to get individual filter values
         const filterValues = parseFilterString(filter);
 
-        // Get the image data from the first canvas with better performance
+        // ✅ Get the image data from the first canvas with better performance
         const imageData = context.getImageData(0, 0, videoWidth, videoHeight);
 
         // Apply each filter manually
@@ -290,7 +342,7 @@ const GenerateBooth: React.FC = () => {
         context.drawImage(tempCanvas, 0, 0);
       }
 
-      // Return captured image as base64
+      // ✅ Return captured image as base64
       return canvas.toDataURL("image/png");
     }
     return null;
@@ -487,7 +539,27 @@ const GenerateBooth: React.FC = () => {
     return [r * 255, g * 255, b * 255];
   };
 
+  // const stopCamera = async () => {
+  //   if (videoRef.current && videoRef.current.srcObject) {
+  //     const stream = videoRef.current.srcObject as MediaStream;
+  //     stream.getTracks().forEach((track) => {
+  //       track.stop();
+  //     });
+  //     videoRef.current.srcObject = null;
+  //   }
+
+  //   try {
+  //     const tracks = (
+  //       await navigator.mediaDevices.getUserMedia({ video: true })
+  //     ).getTracks();
+  //     tracks.forEach((track) => track.stop());
+  //   } catch (error) {
+  //     console.error("Error releasing camera permissions:", error);
+  //   }
+  // };
+
   const handleCameraOff = () => {
+    stopCamera();
     setCameraOn((prev) => !prev);
   };
 
@@ -797,39 +869,29 @@ const GenerateBooth: React.FC = () => {
         <div className="flex flex-col justify-center items-center w-full md:w-auto md:flex md:justify-center md:items-start ">
           {/* Camera Selection Dropdown */}
           <SelectCamera
-            devices={devices}
             selectedDeviceId={selectedDeviceId}
-            onSelectCamera={handleSelectCamera}
+            setSelectedDeviceId={setSelectedDeviceId}
           />
 
           {/* Camera Feed */}
           <div className="flex justify-center items-center w-full max-w-[37.5rem] lg:max-w-[43.75rem] h-64 sm:h-80 md:h-96 relative pt-2">
             {cameraOn ? (
               <>
-                {/* Video Feed using react-webcam */}
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  videoConstraints={{
-                    deviceId: selectedDeviceId
-                      ? { exact: selectedDeviceId }
-                      : undefined,
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                    frameRate: { min: 30, max: 60 },
-                  }}
-                  mirrored={isMirrored}
-                  className="w-full h-full max-w-[20.5rem] sm:max-w-[26rem] md:max-w-[30rem] object-cover rounded-lg"
+                {/* Video Feed */}
+                <video
+                  ref={videoRef}
+                  playsInline
+                  autoPlay
+                  muted
+                  className="video-feed w-full h-full max-w-[20.5rem] sm:max-w-[26rem] md:max-w-[30rem] object-cover rounded-lg"
                   style={{
                     WebkitFilter: filter,
                     filter,
+                    transform: isMirrored ? "scaleX(-1)" : "none",
                     willChange: "transform, filter",
                     backfaceVisibility: "hidden",
+                    WebkitTransform: isMirrored ? "scaleX(-1)" : "none",
                     WebkitBackfaceVisibility: "hidden",
-                  }}
-                  onUserMediaError={(error) => {
-                    console.error("Webcam error:", error);
-                    setCameraOn(false);
                   }}
                 />
 
@@ -844,9 +906,7 @@ const GenerateBooth: React.FC = () => {
                 Camera Off
               </div>
             )}
-
             <canvas ref={canvasRef} className="hidden" />
-
             {countdown !== null && (
               <div className="absolute inset-0 flex items-center justify-center">
                 {/* Shutter Effect */}
