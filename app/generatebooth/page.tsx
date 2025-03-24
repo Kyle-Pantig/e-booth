@@ -84,6 +84,7 @@ const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
   const webcamRef = useRef<Webcam>(null);
+  const skipInitialRender = useRef(true);
   const { devices, selectedDeviceId, setSelectedDeviceId } = useCameras();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -123,18 +124,22 @@ const GenerateBooth: React.FC = () => {
 
   const [autoValue, setAutoValue] = useState<number>(50);
   useEffect(() => {
+    if (skipInitialRender.current) {
+      skipInitialRender.current = false;
+      return;
+    }
+  
     if (webcamRef.current && selectedDeviceId) {
       const stream = webcamRef.current.stream;
       if (stream) {
-        // Stop all video tracks
-        stream.getTracks().forEach(track => track.stop());
+        // Stop existing tracks only when switching cameras
+        stream.getTracks().forEach((track) => track.stop());
       }
-      
-      // Short delay before restarting
+  
       setCameraOn(false);
       const timeout = setTimeout(() => setCameraOn(true), 100);
   
-      return () => clearTimeout(timeout); // Clean up on unmount
+      return () => clearTimeout(timeout);
     }
   }, [selectedDeviceId]);
   
