@@ -9,7 +9,6 @@ import { Spotlight } from "@/components/ui/spotlight-new";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
 import Header from "@/components/Header";
-import { CameraProvider } from "@/context/CameraContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -103,17 +102,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="min-h-screen flex flex-col relative overflow-hidden dark:bg-black-100 bg-white antialiased dark:bg-dot-white/[0.2] bg-dot-black/[0.2]">
-            <CameraProvider>
-              <Header />
-              <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
-              <ModeToggle />
-              <Spotlight />
-              <div className="flex-grow flex justify-center items-center relative">
-                <CapturedImagesProvider>{children}</CapturedImagesProvider>
-              </div>
-              <Footer />
-              <Toaster richColors />
-            </CameraProvider>
+            <Header />
+            <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+            <ModeToggle />
+            <Spotlight />
+            <div className="flex-grow flex justify-center items-center relative">
+              <CapturedImagesProvider>{children}</CapturedImagesProvider>
+            </div>
+            <Footer />
+            <Toaster richColors />
           </div>
         </ThemeProvider>
       </body>

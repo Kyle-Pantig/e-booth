@@ -9,14 +9,7 @@ const Hero = () => {
   const router = useRouter();
 
   const handleStartClick = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then(() => {
-        router.push("/generatebooth");
-      })
-      .catch(() => {
-        alert("Camera access denied. Please allow access to continue.");
-      });
+    router.push("/generatebooth");
   };
   return (
     <div className="w-full flex md:items-center md:justify-center  relative overflow-hidden">
