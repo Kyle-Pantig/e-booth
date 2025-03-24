@@ -84,7 +84,7 @@ const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
   const webcamRef = useRef<Webcam>(null);
-  const { devices, selectedDeviceId, setSelectedDeviceId } = useCameras();
+  const { devices, selectedDeviceId, setSelectedDeviceId, initialized } = useCameras();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
@@ -761,11 +761,13 @@ const GenerateBooth: React.FC = () => {
         {/* Left Section: Camera */}
         <div className="flex flex-col justify-center items-center w-full md:w-auto md:flex md:justify-center md:items-start ">
           {/* Camera Selection Dropdown */}
-          <SelectCamera
-            devices={devices}
-            selectedDeviceId={selectedDeviceId}
-            onSelectCamera={setSelectedDeviceId}
-          />
+          {initialized && devices.length > 0 && (
+            <SelectCamera
+              devices={devices}
+              selectedDeviceId={selectedDeviceId}
+              onSelectCamera={setSelectedDeviceId}
+            />
+          )}
 
           {/* Camera Feed */}
           <div className="flex justify-center items-center w-full max-w-[37.5rem] lg:max-w-[43.75rem] h-64 sm:h-80 md:h-96 relative pt-2">
