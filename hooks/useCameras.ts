@@ -11,9 +11,6 @@ export const useCameras = () => {
 
   const getCameras = useCallback(async () => {
     try {
-      // Request permission first
-      await navigator.mediaDevices.getUserMedia({ video: true });
-
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices
         .filter((device) => device.kind === "videoinput")
