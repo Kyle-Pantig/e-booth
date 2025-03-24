@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { filters } from "@/data";
 import Webcam from "react-webcam";
+import { useCameras } from "@/hooks/useCameras";
 
 const ICONS = {
   brightness: <CiBrightnessUp size={16} />,
@@ -83,6 +84,7 @@ const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
   const webcamRef = useRef<Webcam>(null);
+  const { devices, selectedDeviceId, setSelectedDeviceId } = useCameras();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
@@ -90,7 +92,6 @@ const GenerateBooth: React.FC = () => {
   const [filter, setFilter] = useState<string>("none");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturing, setCapturing] = useState<boolean>(false);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [cameraOn, setCameraOn] = useState<boolean>(true);
   const [sliderValue, setSliderValue] = useState<number>(100);
@@ -121,26 +122,23 @@ const GenerateBooth: React.FC = () => {
   });
 
   const [autoValue, setAutoValue] = useState<number>(50);
-
-  const getCameras = async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(
-        (device) => device.kind === "videoinput"
-      );
-
-      if (videoDevices.length > 0) {
-        setSelectedDeviceId(videoDevices[0].deviceId);
-      }
-    } catch (error) {
-      console.error("Error fetching cameras:", error);
-    }
-  };
-
   useEffect(() => {
-    getCameras();
-  }, []);
+    if (webcamRef.current && selectedDeviceId) {
+      const track = webcamRef.current.stream?.getVideoTracks()[0];
+      if (track) {
+        track.stop();
+        
+        setTimeout(() => {
+          setCameraOn(false);
+          setTimeout(() => setCameraOn(true), 100);
+        }, 100);
+      }
+    }
+  }, [selectedDeviceId]);
 
+  const handleSelectCamera = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+  };
   const triggerFlash = () => {
     if (flashRef.current) {
       flashRef.current.style.opacity = "1";
@@ -780,8 +778,9 @@ const GenerateBooth: React.FC = () => {
         <div className="flex flex-col justify-center items-center w-full md:w-auto md:flex md:justify-center md:items-start ">
           {/* Camera Selection Dropdown */}
           <SelectCamera
+            devices={devices}
             selectedDeviceId={selectedDeviceId}
-            setSelectedDeviceId={setSelectedDeviceId}
+            onSelectCamera={handleSelectCamera}
           />
 
           {/* Camera Feed */}
@@ -808,6 +807,10 @@ const GenerateBooth: React.FC = () => {
                     willChange: "transform, filter",
                     backfaceVisibility: "hidden",
                     WebkitBackfaceVisibility: "hidden",
+                  }}
+                  onUserMediaError={(error) => {
+                    console.error("Webcam error:", error);
+                    setCameraOn(false);
                   }}
                 />
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,65 +8,31 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
-interface Device {
-  deviceId: string;
-  label: string;
-}
-
+// Add props to pass selectedDeviceId and onSelectCamera
 interface SelectCameraProps {
+  devices: { deviceId: string; label: string }[];
   selectedDeviceId: string | null;
-  setSelectedDeviceId: (deviceId: string) => void;
+  onSelectCamera: (deviceId: string) => void;
 }
 
 const SelectCamera: React.FC<SelectCameraProps> = ({
+  devices,
   selectedDeviceId,
-  setSelectedDeviceId,
+  onSelectCamera
 }) => {
   const [open, setOpen] = useState<boolean>(false);
-  const [devices, setDevices] = useState<Device[]>([]);
 
-  // ✅ Fetch available cameras and update state
-  const getCameras = useCallback(async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(
-        (device) => device.kind === "videoinput"
-      );
-
-      setDevices(videoDevices);
-
-      if (videoDevices.length > 0) {
-        // ✅ If the current selected camera is not available, reset to the first camera
-        if (
-          !selectedDeviceId ||
-          !videoDevices.some((device) => device.deviceId === selectedDeviceId)
-        ) {
-          setSelectedDeviceId(videoDevices[0].deviceId);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching cameras:", error);
-    }
-  }, [selectedDeviceId, setSelectedDeviceId]);
-
-  // ✅ Handle camera selection properly
   const handleSelectCamera = (deviceId: string) => {
-    setSelectedDeviceId(deviceId);
+    onSelectCamera(deviceId); // Call the parent callback
     setOpen(false);
   };
-
-  // ✅ Fetch cameras on mount and when the selected device changes
-  useEffect(() => {
-    getCameras();
-  }, [getCameras]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -77,7 +41,7 @@ const SelectCamera: React.FC<SelectCameraProps> = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full md:w-[300px] justify-between bg-accent  dark:text-white dark:hover:text-white"
+          className="w-full md:w-[300px] justify-between bg-accent dark:text-white dark:hover:text-white"
         >
           {selectedDeviceId
             ? devices.find((device) => device.deviceId === selectedDeviceId)
