@@ -122,36 +122,42 @@ const GenerateBooth: React.FC = () => {
   });
 
   const [autoValue, setAutoValue] = useState<number>(50);
-  
+
   useEffect(() => {
-    const initializeWebcam = async () => {
-      if (webcamRef.current && selectedDeviceId) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-              frameRate: { min: 30, max: 60 },
-            },
-          });
-          if (webcamRef.current.video) {
-            webcamRef.current.video.srcObject = stream;
-          }
+    const initializeCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (webcamRef.current) {
+          webcamRef.current.stream = stream;
           setCameraOn(true);
-        } catch (error) {
-          console.error("Error accessing webcam:", error);
-          setCameraOn(false);
         }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setCameraOn(false);
       }
     };
 
-    initializeWebcam();
+    initializeCamera();
+  }, []);
+  
+  useEffect(() => {
+    if (webcamRef.current && selectedDeviceId) {
+      const track = webcamRef.current.stream?.getVideoTracks()[0];
+      if (track) {
+        track.stop();
+        
+        setTimeout(() => {
+          setCameraOn(false);
+          setTimeout(() => setCameraOn(true), 100);
+        }, 100);
+      }
+    }
   }, [selectedDeviceId]);
 
   const handleSelectCamera = (deviceId: string) => {
     setSelectedDeviceId(deviceId);
   };
+  
   const triggerFlash = () => {
     if (flashRef.current) {
       flashRef.current.style.opacity = "1";
