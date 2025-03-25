@@ -9,7 +9,7 @@ import { Spotlight } from "@/components/ui/spotlight-new";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
 import Header from "@/components/Header";
-import AdSense from "@/components/AdSense";
+import AdBanner from "@/components/AdBanner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -92,6 +92,13 @@ export default function RootLayout({
 
           gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');`}
         </Script>
+        {process.env.NODE_ENV === "production" && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+          ></script>
+        )}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -110,9 +117,13 @@ export default function RootLayout({
             <div className="flex-grow flex justify-center items-center relative">
               <CapturedImagesProvider>{children}</CapturedImagesProvider>
             </div>
-            <AdSense
-              pId={`${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`}
-            />
+            <div className="mb-4">
+              <AdBanner
+                dataAdFormat="auto"
+                dataFullWidthResponsive={true}
+                dataAdSlot="6488879549"
+              />
+            </div>
             <Footer />
             <Toaster richColors />
           </div>

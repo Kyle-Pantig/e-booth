@@ -84,7 +84,8 @@ const GenerateBooth: React.FC = () => {
   const { setCapturedImages, numShots, setNumShots } = useCapturedImages();
   const router = useRouter();
   const webcamRef = useRef<Webcam>(null);
-  const { devices, selectedDeviceId, setSelectedDeviceId, initialized } = useCameras();
+  const { devices, selectedDeviceId, setSelectedDeviceId, initialized } =
+    useCameras();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
