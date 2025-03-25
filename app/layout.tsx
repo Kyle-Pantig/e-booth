@@ -9,6 +9,7 @@ import { Spotlight } from "@/components/ui/spotlight-new";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
 import Header from "@/components/Header";
+import AdSense from "@/components/AdSense";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -112,6 +113,7 @@ export default function RootLayout({
             <Footer />
             <Toaster richColors />
           </div>
+          <AdSense pId={`${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`} />
         </ThemeProvider>
       </body>
     </html>
