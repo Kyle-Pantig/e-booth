@@ -110,10 +110,12 @@ export default function RootLayout({
             <div className="flex-grow flex justify-center items-center relative">
               <CapturedImagesProvider>{children}</CapturedImagesProvider>
             </div>
+            <AdSense
+              pId={`${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`}
+            />
             <Footer />
             <Toaster richColors />
           </div>
-          <AdSense pId={`${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`} />
         </ThemeProvider>
       </body>
     </html>
