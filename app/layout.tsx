@@ -67,6 +67,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="google-adsense-account" content="ca-pub-3057643117380889" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link
           rel="icon"
@@ -92,7 +93,7 @@ export default function RootLayout({
 
           gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');`}
         </Script>
-        {process.env.NODE_ENV === "production" && (
+        {process.env.NODE_ENV === "production"  && (
           <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`}

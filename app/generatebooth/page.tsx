@@ -146,7 +146,7 @@ const GenerateBooth: React.FC = () => {
 
     let photosTaken = 0;
     const newCapturedImages: string[] = [];
-
+    
     const captureSequence = async () => {
       if (photosTaken >= numShots) {
         setCountdown(null);
@@ -782,8 +782,8 @@ const GenerateBooth: React.FC = () => {
                     deviceId: selectedDeviceId
                       ? { exact: selectedDeviceId }
                       : undefined,
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
                     frameRate: { min: 30, max: 60 },
                   }}
                   mirrored={isMirrored}
