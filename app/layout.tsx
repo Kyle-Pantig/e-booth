@@ -15,11 +15,13 @@ const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
+  display: "swap", // Improves font loading
 });
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -41,6 +43,8 @@ export const metadata: Metadata = {
     default: "E-Booth | Capture & Share Memories Instantly",
     template: `%s | E-Booth | Capture & Share Memories Instantly`,
   },
+  description:
+    "E-Booth is a digital photo booth that lets you capture, customize, and instantly share your memories via email or social media.",
   openGraph: {
     title: "E-Booth | Capture & Share Memories Instantly",
     description:
@@ -48,6 +52,7 @@ export const metadata: Metadata = {
     url: "https://e-booth.vercel.app",
     siteName: "E-Booth",
     type: "website",
+    locale: "en_US",
     images: [
       {
         url: "/og-image.png",
@@ -56,6 +61,14 @@ export const metadata: Metadata = {
         alt: "E-Booth - Capture & Share Memories Instantly",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@ebooth",
+    title: "E-Booth | Capture & Share Memories Instantly",
+    description:
+      "E-Booth is a digital photo booth that lets you capture, customize, and instantly share your memories via email or social media.",
+    images: ["/og-image.png"],
   },
 };
 
@@ -67,38 +80,35 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta charSet="UTF-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+        />
         <meta name="google-adsense-account" content="ca-pub-3057643117380889" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link
-          rel="icon"
-          href="/icon?<generated>"
-          type="image/<generated>"
-          sizes="<generated>"
-        />
-        <link
-          rel="apple-touch-icon"
-          href="/apple-icon?<generated>"
-          type="image/<generated>"
-          sizes="<generated>"
-        />
-        {/* <!-- Google tag (gtag.js) --> */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <link rel="canonical" href="https://e-booth.vercel.app" />
+
+        {/* <!-- Google Analytics --> */}
         <Script
           async
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
         />
         <Script id="google-analytics" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');`}
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');`}
         </Script>
-        {process.env.NODE_ENV === "production"  && (
-          <script
+
+        {/* <!-- Google Adsense --> */}
+        {process.env.NODE_ENV === "production" && (
+          <Script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID}`}
             crossOrigin="anonymous"
-          ></script>
+          />
         )}
       </head>
       <body
