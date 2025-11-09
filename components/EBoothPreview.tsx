@@ -38,14 +38,12 @@ import {
   FaAdjust,
   FaSlidersH,
   FaThermometerHalf,
-  FaMagic,
   FaCompress,
 } from "react-icons/fa";
 import { CiBrightnessUp } from "react-icons/ci";
 import { MdExposure } from "react-icons/md";
 import { BsHighlights } from "react-icons/bs";
 import { IoTriangleOutline } from "react-icons/io5";
-import { RiResetLeftFill } from "react-icons/ri";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface PhotoPreviewProps {
@@ -1254,21 +1252,16 @@ const EBoothPreview: React.FC<PhotoPreviewProps> = ({ capturedImages }) => {
                 if (!canvas) return;
 
                 const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
                 // Get canvas dimensions
-                const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
                 
                 // Scale coordinates to match canvas internal dimensions
-                const scaleX = canvasWidth / rect.width;
                 const scaleY = canvasHeight / rect.height;
-                const canvasX = x * scaleX;
                 const canvasY = y * scaleY;
 
                 // Calculate photo dimensions (same as in generatePhotoStrip)
-                const imgWidth = 400;
                 const imgHeight = 300;
                 const borderSize = 30;
                 const photoSpacing = 20;
