@@ -100,6 +100,7 @@ const GenerateBooth: React.FC = () => {
   const [filterValues, setFilterValues] = useState<Record<string, number>>({}); // Store slider values for each filter
   const [captureProgress, setCaptureProgress] = useState<string | null>(null);
   const [countdownTime, setCountdownTime] = useState<number>(3);
+  const [isGeneratingStrip, setIsGeneratingStrip] = useState<boolean>(false);
   const [adjustments, setAdjustments] = useState<Adjustments>({
     brightness: 0,
     contrast: 0,
@@ -152,13 +153,19 @@ const GenerateBooth: React.FC = () => {
         setCountdown(null);
         setCapturing(false);
         setCaptureProgress(null);
+        setIsGeneratingStrip(true);
 
         try {
           setCapturedImages([...newCapturedImages]);
           setImages([...newCapturedImages]);
-          router.push("/photopreview");
+          
+          // Small delay to show loading state before redirect
+          setTimeout(() => {
+            router.push("/photopreview");
+          }, 1500);
         } catch (error) {
           console.error("Error navigating to preview:", error);
+          setIsGeneratingStrip(false);
         }
         return;
       }
@@ -757,6 +764,17 @@ const GenerateBooth: React.FC = () => {
 
   return (
     <div className="px-4 md:px-10 lg:px-20 relative antialiased flex flex-col justify-center items-center ">
+      {/* Loading Overlay */}
+      {isGeneratingStrip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+            <p className="text-white text-xl font-semibold animate-pulse">
+              Generating your photostrip...
+            </p>
+          </div>
+        </div>
+      )}
       {/* Main Flex Layout: Responsive for Mobile, Tablet, and Desktop */}
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-32 relative pt-10 ">
         {/* Left Section: Camera */}

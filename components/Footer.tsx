@@ -1,5 +1,5 @@
 const Footer = () => {
-  const version = "1.3.2"; 
+  const version = "1.4.0"; 
 
   return (
     <div className="w-full relative">
